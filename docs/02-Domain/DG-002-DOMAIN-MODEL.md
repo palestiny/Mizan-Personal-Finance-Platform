@@ -1,155 +1,87 @@
 # DG-002 — Domain Model Decision Gate
 
 ## Status
+**State:** Accepted  
+**Phase:** M0 — Product & Domain Foundation  
+**Decision owner:** Khaled  
+**Accepted:** 2026-09-20
 
-**State:** Draft — decision-ready candidate; depends on DG-001 product-scope decisions  
-**Phase:** M0 — Product & Domain Foundation
-
-This gate defines the smallest domain model that can support the new Mizan vision without turning the product into a general accounting system.
-
-## 1. Design objective
-
-Mizan must separate:
-
+## Design objective
+Mizan separates:
 Evidence/Input → Proposal/Interpretation → Accepted Financial Operation → Authoritative Financial Effects → Account/Balance/History
 
-The model must preserve financial correctness while allowing future capture channels, AI, integrations, richer economic semantics, and controlled automation to evolve around the financial core.
+The model preserves financial correctness while allowing future capture channels, AI, integrations, richer economic semantics, and controlled automation to evolve around the financial core.
 
-## 2. Candidate domain concepts
+## Accepted domain concepts
 
 ### Evidence
-
-An observed/input artifact with provenance.
-
-Examples:
-- manual input;
-- text;
-- receipt/image;
-- voice transcription;
-- notification;
-- import;
-- future integration payload.
-
-**Rule:** evidence is not financial truth and cannot directly mutate authoritative financial state.
+An observed/input artifact with provenance. Evidence is a domain concept, but MVP representation remains lightweight. Evidence is not financial truth and cannot directly mutate authoritative financial state.
 
 ### Financial Proposal
-
-A candidate interpretation produced from evidence or direct user input.
-
-It may contain:
-- proposed operation type;
-- amount/currency;
-- candidate accounts;
-- category/counterparty;
-- confidence/ambiguity;
-- supporting evidence references.
-
-**Rule:** a proposal has no authoritative financial effect until accepted by domain policy.
-
-The proposal may remain an application-layer concept in the MVP; that is still an open decision.
+A candidate interpretation produced from evidence or direct user input. It may contain proposed operation type, amount/currency, candidate accounts, category/counterparty, confidence/ambiguity, and supporting evidence references. A proposal has no authoritative financial effect until accepted by domain policy. Proposal is an architectural concept from the beginning, but full persisted proposal lifecycle is not required for the initial MVP path.
 
 ### Financial Operation
-
-An accepted business-level financial event.
-
-Candidate examples:
-- income;
-- personal expense;
-- owned-account transfer;
-- recoverable/payment-on-behalf;
-- advance/shared expense;
-- reimbursement;
-- correction/reversal;
-- informational operation.
+An accepted business-level financial event. MVP types are income, personal expense, and owned-account transfer. Future-ready semantics may later include recoverable/payment-on-behalf, advance/shared expense, reimbursement, informational operations, correction, and reversal.
 
 An operation answers: What happened financially in business terms?
 
+For the UX, an Operation may be presented as a transaction, income, expense, or transfer. The domain authority remains Financial Operation.
+
+Accepted operations are immutable. Corrections and reversals are represented by new operations.
+
 ### Financial Effect
-
-The explicit authoritative change applied to an account by an accepted operation.
-
-Candidate fields:
-- operation identity;
-- account identity;
-- amount;
-- currency;
-- effect direction/type;
-- effective time/order;
-- provenance;
-- correction/reversal relationship where applicable.
+The explicit authoritative change applied to an account by an accepted operation. Effects contain, at minimum, operation identity, account identity, amount, currency, financial direction/type, effective time/order, provenance, and correction/reversal relationship where applicable.
 
 An effect answers: Exactly what changed in authoritative account state?
 
-The model must allow one accepted operation to produce multiple effects without becoming a generic double-entry accounting engine.
+One operation may produce one or more effects. The complete effect set is validated and committed atomically. Effects are immutable after acceptance.
 
 ### Account
+A generic user-owned financial container with stable identity, user-visible name, account classification, currency, lifecycle state, and opening/initial financial state.
 
-A user-owned financial container with:
-- stable identity;
-- user-visible name;
-- account classification;
-- currency;
-- lifecycle state;
-- opening/initial financial state.
+MVP classifications: Cash, Bank, Wallet. Provider-specific financial entities are not part of the core domain.
 
-Account classification must not become provider-specific financial behavior.
+### Currency
+Currency is explicit on financial concepts. MVP supports one currency per user context; multi-currency is future scope and requires its own design gate.
 
 ### Balance
-
-The financial state of an account at a defined point in time.
-
-Candidate rule:
+Balance is the financial state of an account at a defined point in time.
 
 Balance = opening/initial state + applicable authoritative financial effects
 
 A materialized balance may exist for performance, but it remains derived/rebuildable state.
 
 ### History
-
-An auditable view of accepted operations and their authoritative effects, ordered according to approved temporal semantics.
-
-History must explain how an account reached a balance.
+An auditable view of accepted operations and their authoritative effects, ordered according to approved temporal semantics. History must explain how an account reached a balance.
 
 ### Category / Counterparty
-
 Descriptive dimensions. They may improve understanding and intelligence but must not themselves determine financial truth.
 
-## 3. Candidate relationships
-
-Evidence
-→ Financial Proposal
-→ domain validation/confirmation
-→ Financial Operation
-→ one or more Financial Effects
-→ Account
-→ Balance
-→ History
+## Accepted relationships
+Evidence → Financial Proposal → domain validation/confirmation → Financial Operation → one or more Financial Effects → Account → Balance → History
 
 A direct user entry may bypass a persisted proposal and create an accepted operation after domain validation.
 
-## 4. Candidate MVP boundary
+AI and evidence never directly mutate authoritative financial state.
 
-The domain model should support the approved MVP without implementing the entire future vision.
-
-Candidate MVP concepts:
+## Accepted MVP boundary
 - Account
 - Financial Operation
 - Financial Effect
 - Balance
 - History
-- income
-- personal expense
-- owned-account transfer
+- Income
+- Personal Expense
+- Owned-Account Transfer
+- Cash / Bank / Wallet classifications
+- Explicit currency, single-currency MVP
 
-Evidence may be represented minimally as provenance. Proposal may remain an application-layer concept if that reduces MVP complexity without weakening the AI/domain boundary.
+Evidence is represented minimally as provenance where needed. Proposal is available as an architectural boundary but does not require full persistence/lifecycle in the first MVP path.
 
-Recoverables, advances, shared expenses, obligations, and informational events should remain structurally possible but are not automatically MVP features.
+Recoverables, advances, shared expenses, obligations, reimbursement semantics, and informational events remain future-ready but are not MVP behavior.
 
-## 5. What this model deliberately does NOT introduce
-
-The model is not a general accounting engine.
-
-Do not introduce yet:
+## Explicit non-goals
+The model is not a general accounting engine. Do not introduce yet:
 - full double-entry accounting;
 - investment portfolio accounting;
 - bank-provider domain objects;
@@ -159,12 +91,9 @@ Do not introduce yet:
 - forecasting/scenario engines;
 - AI as a domain authority.
 
-Those capabilities can receive their own design gates when validated.
+Those capabilities require their own design gates when validated.
 
-## 6. Candidate invariants to validate in DG-003
-
-DG-003 must verify at minimum:
-
+## Mandatory implications for DG-003
 1. Only accepted operations can create authoritative effects.
 2. Every balance-changing operation has a complete explicit effect set.
 3. Every effect belongs to exactly one accepted operation.
@@ -175,23 +104,27 @@ DG-003 must verify at minimum:
 8. No orphan or cross-operation effects are possible.
 9. Balance rebuild uses authoritative effects, not proposals/evidence.
 10. Corrections preserve historical explainability.
+11. Accepted effects are immutable.
+12. Correction/reversal creates new operations/effects rather than mutating accepted history.
 
-## 7. Open decisions
+## Decision record
+**Decision:** Accepted  
+**Approval:** Product Owner accepted the recommended DG-002 decision bundle on 2026-09-20.
 
-DG-002 still requires Product Owner approval for:
-
-- A simple Financial Record model vs Operation + Effect vs full ledger;
-- whether Evidence/Proposal are persisted domain concepts in MVP or application-layer concepts;
-- whether Financial Operation is user-facing, internal, or both;
-- which richer economic classifications are MVP behavior;
-- account scope;
-- currency scope;
-- correction semantics.
-
-## 8. Decision record
-
-**Decision:** Open  
-**Decision owner:** Khaled  
-**Approval:** Not granted by this document.
-
-The working candidate is Operation + Effect, with Evidence/Proposal surrounding the authoritative financial core.
+### Accepted decisions
+1. **B — Operation + Effect** is the authoritative financial model.
+2. Evidence is a domain concept, represented lightweight in MVP.
+3. Proposal is an architectural concept; full persisted proposal lifecycle is not required for the initial MVP path.
+4. Financial Operation is the authoritative business event and may be presented to users as a transaction/income/expense/transfer.
+5. Accepted Operations are immutable.
+6. Accepted Effects are immutable.
+7. Corrections/Reversals are new Operations with new Effects.
+8. MVP operation types are Income, PersonalExpense, and OwnedAccountTransfer.
+9. Account is generic with Cash, Bank, and Wallet classifications in MVP.
+10. Currency is explicit; MVP remains single-currency.
+11. An Operation produces one or more Effects.
+12. An Operation's complete Effect set commits atomically.
+13. Financial acceptance is idempotent.
+14. Evidence/AI cannot directly mutate authoritative financial state.
+15. A full accounting Ledger is not introduced in M0/MVP.
+16. Recoverable/Advance/Shared/Reimbursement and similar richer semantics are future-ready, not MVP behavior.
