@@ -1,10 +1,14 @@
 name: M1 Tests
 
 on:
-  push:
-    branches:
-      - foundation/m0-product-domain-foundation
   pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: m1-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
 
 jobs:
   test:
