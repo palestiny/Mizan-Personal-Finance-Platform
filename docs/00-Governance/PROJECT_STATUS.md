@@ -5,7 +5,7 @@
 
 ## Current state
 **Status:** In progress  
-**Production implementation:** RED-test suite established; minimal domain implementation is next.
+**Production implementation:** RED-test suite established; minimal domain model implemented; application/persistence path is next.
 
 ## Accepted product and strategy gates
 - **DG-001 Product Scope:** Accepted
@@ -34,7 +34,7 @@ The accepted direction is Mizan as a globally applicable Personal Financial Oper
 | Runtime technology | **Accepted** |
 | Production structure | Established |
 | RED tests | **Established** |
-| Minimal domain implementation | Not started |
+| Minimal domain implementation | **Started / core types implemented** |
 
 ## Accepted domain foundation
 **Operation + Effect** is the authoritative financial model.
@@ -84,7 +84,7 @@ The GitHub Actions workflow `.github/workflows/m1-tests.yml` was added to execut
 - Pricing and packaging remain validation questions.
 
 ## Next action
-Proceed with the **minimum domain implementation required to turn the established RED tests GREEN**, without adding architecture that the tests and accepted slice do not require.
+Proceed with the **minimum application + persistence implementation required to turn the established domain/application RED tests GREEN**, then complete the real API path. Do not add architecture that the accepted slice does not require.
 
 ## Verification rule
 A document is not treated as approved merely because it exists. Gate status and decision records must reflect explicit Product Owner acceptance.
