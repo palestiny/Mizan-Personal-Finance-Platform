@@ -44,8 +44,6 @@ public sealed class FinanceService
         var existing = await _repository.GetOperationByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
         var operation = builder.Accept();
 
-        await ValidateActiveAccountsAsync(operation, cancellationToken);
-
         if (existing is not null)
         {
             if (!SemanticallyMatches(existing, operation))
@@ -53,6 +51,8 @@ public sealed class FinanceService
 
             return existing;
         }
+
+        await ValidateActiveAccountsAsync(operation, cancellationToken);
 
         await _repository.BeginTransactionAsync(cancellationToken);
         try
