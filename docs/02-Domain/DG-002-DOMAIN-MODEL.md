@@ -2,188 +2,196 @@
 
 ## Status
 
-**State:** Draft — depends on DG-001 product-scope decisions
+**State:** Draft — decision-ready candidate; depends on DG-001 product-scope decisions  
 **Phase:** M0 — Product & Domain Foundation
 
-This gate defines the candidate domain model without silently converting unresolved product decisions into architecture.
+This gate defines the smallest domain model that can support the new Mizan vision without turning the product into a general accounting system.
 
 ## 1. Design objective
 
-Define the smallest domain model capable of representing the proposed personal-finance core:
+Mizan must separate:
 
-**Account → Financial Record → Balance → History**
+Evidence/Input → Proposal/Interpretation → Accepted Financial Operation → Authoritative Financial Effects → Account/Balance/History
 
-The model must preserve financial correctness and make the source of truth explicit.
+The model must preserve financial correctness while allowing future capture channels, AI, integrations, richer economic semantics, and controlled automation to evolve around the financial core.
 
 ## 2. Candidate domain concepts
 
+### Evidence
+
+An observed/input artifact with provenance.
+
+Examples:
+- manual input;
+- text;
+- receipt/image;
+- voice transcription;
+- notification;
+- import;
+- future integration payload.
+
+**Rule:** evidence is not financial truth and cannot directly mutate authoritative financial state.
+
+### Financial Proposal
+
+A candidate interpretation produced from evidence or direct user input.
+
+It may contain:
+- proposed operation type;
+- amount/currency;
+- candidate accounts;
+- category/counterparty;
+- confidence/ambiguity;
+- supporting evidence references.
+
+**Rule:** a proposal has no authoritative financial effect until accepted by domain policy.
+
+The proposal may remain an application-layer concept in the MVP; that is still an open decision.
+
+### Financial Operation
+
+An accepted business-level financial event.
+
+Candidate examples:
+- income;
+- personal expense;
+- owned-account transfer;
+- recoverable/payment-on-behalf;
+- advance/shared expense;
+- reimbursement;
+- correction/reversal;
+- informational operation.
+
+An operation answers: What happened financially in business terms?
+
+### Financial Effect
+
+The explicit authoritative change applied to an account by an accepted operation.
+
+Candidate fields:
+- operation identity;
+- account identity;
+- amount;
+- currency;
+- effect direction/type;
+- effective time/order;
+- provenance;
+- correction/reversal relationship where applicable.
+
+An effect answers: Exactly what changed in authoritative account state?
+
+The model must allow one accepted operation to produce multiple effects without becoming a generic double-entry accounting engine.
+
 ### Account
 
-Represents a place where money is held or tracked.
+A user-owned financial container with:
+- stable identity;
+- user-visible name;
+- account classification;
+- currency;
+- lifecycle state;
+- opening/initial financial state.
 
-Candidate responsibilities:
-- Stable identity
-- User-visible name
-- Account type
-- Currency
-- Lifecycle/status
-- Current financial state derived from authoritative records
-
-An Account should not own duplicated financial history as an independent source of truth.
-
-### Financial Record
-
-Represents an accepted financial change.
-
-Candidate categories:
-- Income
-- Expense
-- Transfer
-
-A financial record must have an explicit financial effect and enough information to reconstruct the affected account balance.
-
-### Transfer
-
-A transfer is a single business operation that moves value between two accounts owned by the user.
-
-The domain must treat the transfer as one atomic financial operation, even if persistence later represents its effects using more than one record.
+Account classification must not become provider-specific financial behavior.
 
 ### Balance
 
-A balance is the financial state of an account at a point in time.
+The financial state of an account at a defined point in time.
 
 Candidate rule:
 
-**Balance = opening/initial state + authoritative financial effects**
+Balance = opening/initial state + applicable authoritative financial effects
 
-A cached or materialized balance may exist for performance, but it must not become the independent source of financial truth.
+A materialized balance may exist for performance, but it remains derived/rebuildable state.
 
 ### History
 
-History is the ordered/auditable representation of accepted financial changes affecting an account.
+An auditable view of accepted operations and their authoritative effects, ordered according to approved temporal semantics.
 
-History must be sufficient to explain how the account reached its balance.
+History must explain how an account reached a balance.
 
-### Category
+### Category / Counterparty
 
-Category is a classification of a financial record, not the financial event itself.
-
-It should remain outside the minimum financial truth model unless the approved MVP workflows require it.
+Descriptive dimensions. They may improve understanding and intelligence but must not themselves determine financial truth.
 
 ## 3. Candidate relationships
 
-- User owns one or more Accounts.
-- An Account has one Currency.
-- An Account is affected by zero or more Financial Records.
-- An Income affects one Account positively.
-- An Expense affects one Account negatively.
-- A Transfer affects exactly two Accounts: source and destination.
-- A Financial Record may optionally have a Category.
-- Balance is derived from the account's authoritative financial effects.
+Evidence
+→ Financial Proposal
+→ domain validation/confirmation
+→ Financial Operation
+→ one or more Financial Effects
+→ Account
+→ Balance
+→ History
 
-## 4. Candidate invariants to validate in DG-003
+A direct user entry may bypass a persisted proposal and create an accepted operation after domain validation.
 
-The following are design candidates, not yet final invariants:
+## 4. Candidate MVP boundary
 
-1. Money must never be represented using floating-point arithmetic.
-2. A financial record must have a valid monetary amount.
-3. An accepted expense cannot increase the affected account.
-4. An accepted income cannot decrease the affected account.
-5. A transfer must have distinct source and destination accounts.
-6. A transfer must preserve total value across its two affected accounts, excluding explicit fees/adjustments if those are later introduced.
-7. An account balance must be explainable from authoritative financial records.
-8. Historical financial records must not be mutated in a way that silently changes previously accepted financial truth.
-9. Invalid financial operations must not partially commit.
-10. Currency semantics must be explicit before multi-currency behavior is implemented.
+The domain model should support the approved MVP without implementing the entire future vision.
 
-DG-003 must turn these candidates into explicit, testable rules.
+Candidate MVP concepts:
+- Account
+- Financial Operation
+- Financial Effect
+- Balance
+- History
+- income
+- personal expense
+- owned-account transfer
 
-## 5. Correction semantics dependency
+Evidence may be represented minimally as provenance. Proposal may remain an application-layer concept if that reduces MVP complexity without weakening the AI/domain boundary.
 
-The domain model intentionally does not choose the final correction strategy yet.
+Recoverables, advances, shared expenses, obligations, and informational events should remain structurally possible but are not automatically MVP features.
 
-Possible product-level policies from DG-001:
-- Direct edit
-- Compensating/reversal operation
-- Mixed policy
+## 5. What this model deliberately does NOT introduce
 
-The chosen policy determines whether Financial Record is mutable, immutable, or has controlled correction states.
+The model is not a general accounting engine.
 
-## 6. Currency dependency
+Do not introduce yet:
+- full double-entry accounting;
+- investment portfolio accounting;
+- bank-provider domain objects;
+- autonomous financial-agent state;
+- household permissions;
+- budgets/goals;
+- forecasting/scenario engines;
+- AI as a domain authority.
 
-The model assumes an Account has a currency, but does not yet define conversion.
+Those capabilities can receive their own design gates when validated.
 
-The final decision depends on DG-001:
-- Single currency: conversion can remain outside the MVP.
-- Multi-currency: exchange-rate provenance, conversion timing, valuation semantics, and transfer rules require explicit design.
+## 6. Candidate invariants to validate in DG-003
 
-No implicit conversion behavior should be introduced.
+DG-003 must verify at minimum:
 
-## 7. Offline dependency
+1. Only accepted operations can create authoritative effects.
+2. Every balance-changing operation has a complete explicit effect set.
+3. Every effect belongs to exactly one accepted operation.
+4. Every effect identifies account, amount, currency, direction/type, and provenance.
+5. An operation's complete effect set commits atomically.
+6. Evidence/proposals cannot directly change balances.
+7. Replaying an accepted operation cannot duplicate effects.
+8. No orphan or cross-operation effects are possible.
+9. Balance rebuild uses authoritative effects, not proposals/evidence.
+10. Corrections preserve historical explainability.
 
-The model itself should remain independent of synchronization concerns.
+## 7. Open decisions
 
-If offline is mandatory, later architecture must define:
-- local authoritative write behavior
-- synchronization
-- conflict handling
-- durable recovery
+DG-002 still requires Product Owner approval for:
 
-These concerns must not leak into the core financial invariants.
+- A simple Financial Record model vs Operation + Effect vs full ledger;
+- whether Evidence/Proposal are persisted domain concepts in MVP or application-layer concepts;
+- whether Financial Operation is user-facing, internal, or both;
+- which richer economic classifications are MVP behavior;
+- account scope;
+- currency scope;
+- correction semantics.
 
-## 8. Deliberately deferred concepts
+## 8. Decision record
 
-Do not introduce these into the core domain model yet:
-- Budget
-- Goal
-- Forecast
-- Investment portfolio
-- Bank connection
-- AI recommendation
-- Autonomous financial action
-- Household collaboration
-- Business accounting
+**Decision:** Open  
+**Decision owner:** Khaled  
+**Approval:** Not granted by this document.
 
-They may be added through separate design gates when product scope requires them.
-
-## 9. Domain boundary proposal
-
-The candidate core boundary is:
-
-**Financial Account Management**
-→ Accounts
-→ Financial Records
-→ Transfers
-→ Balance derivation
-→ Financial History
-
-Reporting, intelligence, integrations, and UI should consume this domain rather than redefine financial truth.
-
-## 10. Open decisions
-
-DG-002 cannot be finalized until the following DG-001 decisions are explicit:
-
-- Target user boundary
-- MVP financial scope
-- Account scope
-- Currency scope
-- Offline requirement
-- Historical correction policy
-- Data portability
-
-## 11. Gate sequence
-
-After DG-001 is accepted:
-
-**DG-002 Domain Model**
-→ **DG-003 Financial Invariants**
-→ **DG-004 Transaction Model**
-→ **DG-005 Balance Model**
-
-Only after these gates are sufficiently resolved should production implementation begin.
-
-## 12. Decision record
-
-**Decision:** Open
-**Decision owner:** Khaled
-**Rationale:** Candidate model prepared; final model depends on accepted product-scope decisions.
+The working candidate is Operation + Effect, with Evidence/Proposal surrounding the authoritative financial core.

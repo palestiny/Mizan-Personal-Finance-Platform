@@ -5,281 +5,248 @@
 **State:** Draft — candidate rules only; depends on DG-001 and DG-002 decisions  
 **Phase:** M0 — Product & Domain Foundation
 
-This gate converts the candidate domain model into explicit, testable financial invariants. It does not approve unresolved product policy.
+This gate converts the candidate Operation + Effect domain model into explicit, testable financial invariants. It does not approve unresolved product policy.
 
 ## 1. Purpose
 
-Mizan's most important technical property is that financial state remains explainable, deterministic, and correct.
+Mizan's most important technical property is that authoritative financial state remains explainable, deterministic, recoverable, and correct.
 
-The invariants in this document define rules that must remain true regardless of UI, API, storage engine, cache, AI component, or synchronization mechanism.
+The invariants apply regardless of UI, API, storage engine, cache, AI component, or synchronization mechanism.
 
-Production code must not be written against an unapproved interpretation of these rules.
+## 2. Source-of-truth invariants
 
-## 2. Source-of-truth invariant
+### I-001 — Authoritative financial effects
 
-### I-001 — Authoritative financial history
+There is one authoritative representation of accepted financial effects.
 
-The system must have one authoritative representation of accepted financial effects.
+Derived values such as balances, totals, reports, charts, search indexes, and AI insights must never become independent financial truth.
 
-Derived values such as:
+### I-002 — Proposal/evidence isolation
 
-- cached balances
-- dashboard totals
-- reports
-- charts
-- AI insights
-- search indexes
+Evidence, AI output, and unaccepted proposals cannot directly mutate authoritative financial state.
 
-must never become an independent source of financial truth.
-
-**Verification direction:** a derived balance can be rebuilt from authoritative financial state and produce the same result.
+Only an accepted financial operation may produce authoritative effects.
 
 ## 3. Monetary representation
 
-### I-002 — No floating-point money
+### I-003 — No floating-point money
 
-Financial amounts must not use binary floating-point representation for authoritative monetary calculations.
+Authoritative monetary calculations must not use binary floating-point representation.
 
-The representation must preserve exact monetary semantics appropriate to the selected currency model.
+### I-004 — Valid monetary amount
 
-**Dependency:** DG-001 currency decision.
-
-### I-003 — Valid monetary amount
-
-Every accepted financial effect must satisfy an explicit amount rule.
+Every accepted effect must satisfy explicit amount and precision rules.
 
 At minimum:
+- amount is present;
+- amount is finite;
+- amount is not NaN;
+- amount conforms to approved precision;
+- zero-value behavior is explicitly allowed or rejected.
 
-- amount is present
-- amount is finite
-- amount is not NaN
-- amount conforms to the selected precision
-- zero-value operations are either explicitly allowed or explicitly rejected
+## 4. Operation/effect invariants
 
-The zero-value policy must be decided before transaction implementation.
+### I-005 — Complete explicit effect set
 
-## 4. Account-effect invariants
+Every accepted balance-changing operation has an explicit, complete set of financial effects.
 
-### I-004 — Every accepted financial operation has explicit effects
+No balance mutation may be inferred from UI labels, categories, descriptions, or AI output.
 
-An accepted financial operation must make its financial effect on each affected account explicit.
+### I-006 — Effect ownership
 
-The system must not infer a balance change from UI labels, categories, descriptions, or AI output.
+Every authoritative effect belongs to exactly one accepted financial operation.
 
-### I-005 — Income effect
+Orphan effects and effects shared by multiple operations are invalid.
 
-An income operation must increase the balance of its receiving account by its accepted monetary effect.
+### I-007 — Effect identity
 
-### I-006 — Expense effect
+Every effect identifies, at minimum:
+- operation;
+- account;
+- amount;
+- currency;
+- financial direction/effect type;
+- authoritative ordering/effective-time information.
 
-An expense operation must decrease the balance of its spending account by its accepted monetary effect.
+### I-008 — Atomic effect set
 
-The domain representation may use signed effects or another explicit representation; the invariant is the financial result, not the storage shape.
+An operation's complete effect set is accepted atomically.
+
+A partially applied operation is invalid financial state.
+
+### I-009 — Operation semantics
+
+The effects produced by an accepted operation must satisfy that operation's approved business semantics.
+
+For example:
+- income increases the receiving account;
+- personal expense decreases the spending account;
+- owned-account transfer decreases the source and increases the destination.
 
 ## 5. Transfer invariants
 
-### I-007 — Distinct transfer endpoints
+### I-010 — Distinct transfer endpoints
 
-A transfer must have a distinct source account and destination account.
+A transfer must have distinct source and destination accounts unless an explicit future policy defines otherwise.
 
-A self-transfer must be rejected unless a later product decision explicitly defines a legitimate use case.
+### I-011 — Transfer conservation
 
-### I-008 — Transfer conservation
+For same-currency transfers with no explicit fee/adjustment:
 
-A transfer must preserve value between its source and destination accounts.
+source decrease = destination increase
 
-For a same-currency transfer with no explicit fee or adjustment:
+Fees, taxes, adjustments, and conversions must be represented explicitly rather than hidden inside transfer semantics.
 
-**source decrease = destination increase**
+### I-012 — Transfer atomicity
 
-The transfer must not create or destroy value.
-
-If fees, taxes, adjustments, or cross-currency conversion are introduced, their effects must be represented explicitly rather than hidden inside the transfer rule.
-
-### I-009 — Atomic transfer
-
-A transfer is one business operation.
-
-Either all required financial effects are accepted, or none are accepted.
-
-A partially applied transfer is invalid financial state.
+A transfer is one business operation. All required effects succeed or none do.
 
 ## 6. Balance invariants
 
-### I-010 — Deterministic balance
+### I-013 — Deterministic balance
 
-For an account and a defined point in time, the balance must be deterministically reproducible from:
+For an account and defined point in time, the balance is reproducible from:
+- valid opening/initial state;
+- authoritative effects applicable to that point;
+- approved currency semantics.
 
-- the account's valid initial/opening state
-- authoritative financial effects applicable to that point in time
-- the approved currency semantics
+### I-014 — Explainable balance
 
-### I-011 — Explainable balance
+Every displayed balance must be explainable through authoritative history.
 
-Every balance must be explainable through the financial history that produced it.
+Divergence between displayed/materialized state and authoritative state is a correctness failure.
 
-If a displayed balance cannot be reconciled with authoritative financial state, the system must treat that as a correctness failure rather than silently repairing the number.
+### I-015 — Materialized balance is derived
 
-### I-012 — Materialized balance is derived state
+A stored balance may improve performance, but it must be rebuildable and verifiable against authoritative effects.
 
-A stored or cached balance may be used for performance, but it must be recoverable/rebuildable from authoritative state.
+## 7. Temporal and ordering invariants
 
-The implementation must define a verification path that can detect divergence.
+### I-016 — Explicit financial time
 
-## 7. Atomicity and failure
+The model must distinguish the time an event is financially effective from the time it was recorded when that distinction matters.
 
-### I-013 — No partial financial commit
+### I-017 — Deterministic ordering
 
-A financial operation that fails validation or persistence must not leave a partial financial effect.
+When multiple effects share or interact around a time boundary, their authoritative ordering must be deterministic and reproducible.
 
-This applies especially to:
-
-- transfers
-- corrections
-- multi-record operations
-- future synchronized operations
-
-### I-014 — Invalid operations do not change financial truth
-
-If a financial operation violates an invariant, it must be rejected without changing authoritative financial state.
+The exact ordering policy is a DG-004/DG-005 decision.
 
 ## 8. History and correction
 
-### I-015 — No silent historical mutation
+### I-018 — No silent historical mutation
 
-An accepted financial event must not be changed in a way that silently changes previously accepted financial truth.
+Accepted financial effects must not be silently changed in a way that alters previously accepted financial truth.
 
-The exact correction mechanism remains unresolved until DG-001 decides between:
+### I-019 — Correction is explicit
 
-- direct edit
-- compensating/reversal operation
-- mixed policy
+A correction must preserve an explainable relationship between the original accepted operation and the resulting correction/reversal or approved edit.
 
-### I-016 — Correction must remain explainable
+### I-020 — Historical explainability
 
-Whatever correction policy is approved, the resulting financial state must remain explainable.
-
-A user/reviewer must be able to determine:
-
-- what was originally accepted
-- what correction occurred
-- why the resulting balance changed
-
-The implementation details belong to DG-004 after the product policy is decided.
+A reviewer must be able to determine:
+- what was originally accepted;
+- what changed;
+- when/how the correction became effective;
+- why the resulting balance changed.
 
 ## 9. Currency invariants
 
-### I-017 — Currency is explicit
+### I-021 — Currency is explicit
 
-Every account and authoritative monetary effect must have unambiguous currency semantics.
+Every account and authoritative effect has unambiguous currency semantics.
 
-No operation may rely on an implicit currency conversion.
+### I-022 — No implicit cross-currency behavior
 
-### I-018 — No implicit cross-currency transfer
+No cross-currency operation may use a hidden or assumed exchange rate.
 
-A cross-currency operation must not be accepted using a hidden or assumed exchange rate.
-
-If multi-currency is approved, DG-004/DG-005 must define:
-
-- exchange-rate source/provenance
-- effective time
-- precision/rounding
-- valuation semantics
-- treatment of rate changes
-- transfer representation
+If multi-currency is approved, rate source/provenance, effective time, precision, rounding, valuation, and transfer representation must be explicit.
 
 ## 10. Idempotency and retries
 
-### I-019 — Safe retry semantics
+### I-023 — Safe retry
 
-Retrying an already accepted financial operation must not create an unintended duplicate financial effect.
+Retrying an already accepted operation must not create unintended duplicate effects.
 
-The exact idempotency mechanism belongs to the transaction/persistence design, but the business invariant is mandatory.
+### I-024 — Idempotency boundary
 
-### I-020 — Deterministic rejection
+The system must define what constitutes the same operation/retry and where the idempotency key is authoritative.
 
-The same invalid operation under the same authoritative state should produce a consistent rejection reason/category.
+This decision belongs to DG-004/persistence design.
 
-This supports debugging, client behavior, automated testing, and safe retries.
+### I-025 — Deterministic rejection
+
+The same invalid operation under the same authoritative state produces a consistent rejection category.
 
 ## 11. Validation boundaries
 
-### I-021 — Domain validation is authoritative
+### I-026 — Domain validation is authoritative
 
-UI validation, API validation, and client-side checks may improve usability, but they must not replace domain-level financial validation.
+UI/API/client validation may improve usability but cannot replace domain validation.
 
-The authoritative rules must remain enforceable independently of presentation.
+### I-027 — Validate before mutation
 
-### I-022 — Validation must precede financial mutation
+All applicable financial invariants are validated before authoritative effects are committed.
 
-An operation must pass all applicable business invariants before its authoritative financial state is changed.
+## 12. Failure and recovery
 
-## 12. Recovery and rebuild
+### I-028 — No partial financial commit
 
-### I-023 — Financial state must be recoverable
+A failed operation must not leave partial financial effects.
 
-The system must have a defined path to reconstruct authoritative financial state after an ordinary storage/cache failure.
+### I-029 — Invalid operations do not change truth
 
-This does not yet choose a database or storage architecture.
+Rejected operations do not mutate authoritative financial state.
 
-### I-024 — Rebuild must preserve results
+### I-030 — Recoverable financial state
 
-Rebuilding derived state from authoritative financial data must produce results consistent with the accepted financial state.
+There is a defined path to reconstruct authoritative state after ordinary storage/cache failure.
 
-## 13. Candidate test matrix
+### I-031 — Rebuild preserves results
 
-Before production implementation, DG-003 should map each invariant to executable verification.
+Rebuilding derived state from authoritative effects produces the same accepted financial results.
 
-Minimum categories:
+## 13. Additional candidate policy points
+
+- zero-value operation policy;
+- fee/adjustment representation;
+- maximum/allowed number of affected accounts per operation;
+- effective-time vs recording-time ordering;
+- correction/reversal semantics;
+- idempotency key ownership;
+- whether informational/no-effect operations are persisted;
+- concurrency/conflict behavior once multi-device/offline work is introduced.
+
+## 14. Candidate verification matrix
 
 | Category | Required verification |
 |---|---|
-| Money | precision, invalid values, zero policy |
-| Income | positive effect, invalid amount |
-| Expense | negative financial effect, invalid amount |
+| Money | exact representation, precision, invalid values, zero policy |
+| Operation/effect | ownership, completeness, atomicity, no orphan effects |
+| Income/expense | correct directional effect |
 | Transfer | distinct accounts, conservation, atomicity |
-| Balance | deterministic calculation, explainability |
-| Correction | approved policy, audit/explainability |
-| Currency | explicit currency, conversion rules |
+| Balance | deterministic rebuild and explainability |
+| Ordering | same input/state produces same result |
+| Correction | explicit history and resulting balance |
+| Currency | explicit currency and no implicit conversion |
 | Retry | duplicate prevention |
-| Failure | rollback/no partial commit |
+| Failure | no partial commit |
 | Recovery | rebuild consistency |
 | Validation | domain rules independent of UI |
+| Evidence/AI | cannot mutate authoritative truth |
 
-## 14. Decisions still blocking finalization
+## 15. Gate dependencies
 
-DG-003 cannot be finalized until the following are explicit:
+DG-003 depends on:
+DG-001 Product Scope → DG-002 Domain Model
 
-- DG-001 target user boundary
-- DG-001 MVP scope
-- DG-001 account scope
-- DG-001 currency scope
-- DG-001 offline requirement
-- DG-001 correction policy
-- DG-001 portability scope
-- DG-002 final domain model
+DG-003 then informs:
+DG-004 Transaction Model → DG-005 Balance Model
 
-Additional decisions required during this gate:
-
-- zero-value financial operation policy
-- exact monetary precision policy
-- treatment of fees/adjustments
-- exact historical ordering semantics
-- idempotency boundary/key semantics
-
-These should be decided before production transaction implementation.
-
-## 15. Gate sequence
-
-**DG-001 Product Scope**
-→ **DG-002 Domain Model**
-→ **DG-003 Financial Invariants**
-→ **DG-004 Transaction Model**
-→ **DG-005 Balance Model**
-→ production implementation
+No production financial implementation should depend on unresolved invariant policy.
 
 ## 16. Decision record
 
 **Decision:** Open  
 **Decision owner:** Khaled  
-**Rationale:** Candidate invariants prepared for review; final rules depend on accepted product/domain decisions.
+**Approval:** Not granted by this document.

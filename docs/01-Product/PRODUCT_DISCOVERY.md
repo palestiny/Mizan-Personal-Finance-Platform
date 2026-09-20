@@ -4,134 +4,138 @@
 
 **Discovery document — not a final product specification**
 
-This document captures the current product direction and questions that must be resolved through DG-001. It deliberately avoids turning unvalidated assumptions into requirements.
+This document records hypotheses and questions that feed the product/strategy gates. It is intentionally broader than an expense tracker while keeping the first release bounded.
 
 ## Product direction
 
-Mizan is intended to be a mobile-first personal financial system that helps an individual maintain an accurate, understandable record of their financial life.
+Mizan is intended to become a Personal Financial Operating System that progressively helps a person:
 
-The initial direction is broader than an expense tracker. The system may need to represent:
+Capture → Understand → Explain → Predict → Recommend → Act
 
-- Accounts
-- Income
-- Expenses
-- Transfers
-- Balances
-- Financial transaction history
+The first product must earn trust through accurate financial state before higher-order intelligence becomes authoritative or action-oriented.
 
-The authoritative financial state must come from explicit financial records and defined business rules, not from AI-generated conclusions, UI state, caches, or inferred values.
+Mizan is global by design. Egypt and the initial personal-use context are validation conditions, not product boundaries.
 
-## Problem to investigate
+## Initial problem hypothesis
 
-People need a reliable way to understand what money they have, where it came from, where it went, and how their financial state changed over time.
+People's financial information is fragmented across cash, bank accounts, wallets, receipts, messages, memory, spreadsheets, and finance applications. The product opportunity is to reduce the effort required to turn that fragmented information into a trusted financial picture and useful next actions.
 
-The product must make correctness understandable to the user while remaining practical for frequent mobile use.
+This is a hypothesis to validate, not a claim that the market has already been proven.
 
-The exact problem statement, target segment, and measurable product outcomes are still open for DG-001.
+## Candidate initial user
 
-## Candidate primary user
+Individual personal-finance user
 
-**Individual personal-finance user**
+This remains the working MVP hypothesis. Household/shared finance and professional variants are intentionally deferred unless discovery evidence changes the boundary.
 
-This is the current working hypothesis. Household/shared-finance scenarios, multiple users, and organizational use are not yet part of the approved initial scope.
+## Candidate first wedge
+
+Trust + effortless capture + immediate understanding
+
+The MVP does not need every capture channel. It needs a trustworthy core and at least one capture path that can be measured against the user's current baseline.
+
+## Candidate minimum trustworthy loop
+
+Capture → Interpret → Validate → Commit → Explain
+
+AI may participate in interpretation and explanation. The domain remains authoritative for validation and commitment.
 
 ## Candidate core jobs
-
-The following are discovery candidates, not final requirements:
 
 1. Record money received.
 2. Record money spent.
 3. Move money between owned accounts.
-4. See current balances.
-5. Review financial history.
-6. Correct an incorrectly recorded financial event without silently corrupting history.
-7. Use the system reliably when connectivity is unavailable, if offline-first is approved.
-8. Understand the effect of a financial action before it is committed.
+4. See current and historical financial state.
+5. Correct a financial event without silently corrupting history.
+6. Understand why a balance changed.
+7. Reduce the effort required to keep financial records current.
+8. Later, use trusted history to anticipate and evaluate financial decisions.
+
+## Candidate economic scenarios
+
+The discovery process should test whether users need distinctions between:
+- personal expenses;
+- owned-account transfers;
+- payments on behalf of others;
+- recoverables/reimbursements;
+- advances/shared expenses;
+- obligations/expected future payments;
+- informational events with no balance effect.
+
+These scenarios should be promoted into MVP behavior only when evidence and domain gates justify them.
 
 ## Candidate product qualities
 
-The product should be evaluated against:
+Evaluate the product against:
+- financial correctness;
+- reliability;
+- privacy/security;
+- recoverability;
+- usability and capture effort;
+- explainability;
+- accessibility;
+- maintainability;
+- observability;
+- auditability;
+- portability;
+- testability.
 
-- Financial correctness
-- Reliability
-- Privacy
-- Security
-- Recoverability
-- Offline usability
-- Performance
-- Accessibility
-- Maintainability
-- Observability
-- Auditability
-- Data portability
-- Testability
+## Discovery questions
 
-The final priority and measurable targets remain open.
-
-## Candidate scope questions for DG-001
-
-### Users and ownership
-
-- Is Mizan strictly single-user initially?
-- Is multi-device use required for the MVP?
-- Are shared accounts/households in or out of the initial product boundary?
+### User and value
+- Which user segment experiences the problem frequently enough to return?
+- Which capture methods actually reduce effort?
+- What explanation/insight is useful enough to create recurring value?
+- Which pain points justify payment?
 
 ### Financial scope
+- Which account types are essential?
+- Is multi-currency needed at launch?
+- Are credit cards, liabilities, recurring transactions, budgets, or goals essential to the first validated use case?
 
-- What account types are required initially?
-- Is multi-currency required for MVP?
-- Are credit cards, loans, liabilities, or negative balances required?
-- Are recurring transactions required?
-- Are budgets/goals part of the initial product or later?
+### Economic semantics
+- How often do reimbursements, shared payments, advances, or obligations occur?
+- Which of these need first-class behavior versus relationships/metadata?
 
-### History and correction
+### Trust and control
+- What corrections do users expect?
+- What must remain immutable/auditable?
+- Which AI proposals are acceptable without confirmation?
+- Which actions require explicit authorization?
 
-- Can a posted transaction be edited directly?
-- When should a correction create a new compensating record instead?
-- What does “delete” mean for financial history?
-- What history must remain auditable?
+### Commercial validation
+- What measurable value is created per week/month?
+- Which capability drives retention?
+- What would users pay for?
+- Which usage limits or premium capabilities are perceived as fair?
 
-### Data portability
+### Globalization
+- Which requirements are truly universal?
+- Which are country/provider-specific and should live at integration/localization edges?
+- Which currencies, languages, tax/legal requirements, or data-access constraints are market-specific?
 
-- Is export required for MVP?
-- Which formats are acceptable?
-- Is import part of the initial scope?
+## Foundation non-goals
 
-### Connectivity
+The foundation should not implement:
+- advanced forecasting;
+- autonomous financial decisions;
+- broad bank integrations;
+- household collaboration;
+- investment management;
+- full accounting/ledger infrastructure;
+- microservices;
+- every AI capability in the vision.
 
-- Is offline operation mandatory for the first release or a later milestone?
-- What must remain available offline?
-- What happens when two devices change the same financial data?
+These remain future capabilities or validation targets, not reasons to overbuild M0.
 
-### Security and privacy
+## DG-001/DG-013 acceptance evidence
 
-- What authentication model is required?
-- What data must be encrypted locally?
-- What recovery path exists when the user loses access?
-- Which privacy/legal requirements are applicable to the target release?
-
-## Current non-goals for the foundation
-
-The following should not drive the initial architecture unless a later product decision requires them:
-
-- AI as a source of financial truth
-- Advanced forecasting
-- Autonomous financial decisions
-- Social/community features
-- Premature bank integrations
-- Microservice decomposition without a demonstrated need
-
-These are scope-control statements, not permanent product prohibitions.
-
-## DG-001 acceptance criteria
-
-DG-001 should not close until the repository contains an approved product decision covering:
-
-- Problem statement
-- Target user
-- Core jobs/use cases
-- MVP scope
-- Explicit non-goals
-- Success/acceptance outcomes
-- Major product constraints
-- Known open questions and their owners/status
+Before the product strategy/scope gates close, the repository should contain:
+- target problem and user hypothesis;
+- minimum trustworthy loop;
+- bounded MVP;
+- explicit non-goals;
+- measurable validation outcomes;
+- major constraints;
+- open questions with owners/status;
+- initial commercial hypotheses and evidence plan.
