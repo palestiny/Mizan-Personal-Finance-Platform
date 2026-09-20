@@ -20,7 +20,7 @@ namespace Mizan.Infrastructure.Migrations
                 table: "financial_operations",
                 column: "OriginalOperationId",
                 unique: true,
-                filter: "\"original_operation_id\" IS NOT NULL");
+                filter: "\"OriginalOperationId\" IS NOT NULL");
 
             migrationBuilder.AddForeignKey(
                 name: "FK_financial_operations_financial_operations_OriginalOperationId",
