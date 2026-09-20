@@ -8,12 +8,12 @@ This matrix is the control surface for M0. It distinguishes direction, proposals
 
 | Gate | Current state | Depends on | Blocks |
 |---|---|---|---|
-| DG-001 | **Open — Product Owner decision required** | Product direction | DG-002, DG-003, DG-004, DG-005 |
-| DG-013 | **Open — Strategy validation/decision required** | Product direction + discovery evidence | Release strategy, AI sequencing, commercial validation |
-| DG-002 | **Draft — candidate prepared** | DG-001 | DG-003, DG-004 |
-| DG-003 | **Draft — candidate prepared** | DG-002 | DG-004, DG-005 |
-| DG-004 | **Draft — candidate prepared** | DG-003 | DG-005 |
-| DG-005 | **Not started** | DG-004 | Balance implementation |
+| DG-001 | **Accepted** | Product direction | DG-002, DG-003, DG-004, DG-005 |
+| DG-013 | **Accepted** | Product direction + discovery evidence | Release strategy, AI sequencing, commercial validation |
+| DG-002 | **Accepted** | DG-001 | DG-003, DG-004 |
+| DG-003 | **Accepted** | DG-002 | DG-004, DG-005 |
+| DG-004 | **Accepted** | DG-003 | DG-005 |
+| DG-005 | **Accepted** | DG-004 | Thin vertical slice |
 | DG-006 | **Not started** | Approved product requirement + DG-005 | Offline architecture if required |
 | DG-007 | **Not started** | Domain/balance requirements + concrete runtime constraints | Persistence implementation |
 | DG-008 | **Not started** | Persistence + offline requirement | Multi-device synchronization |
