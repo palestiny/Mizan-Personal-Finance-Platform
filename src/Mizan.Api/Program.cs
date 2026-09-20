@@ -77,6 +77,32 @@ app.MapPost("/api/operations/expense", async (AcceptExpenseRequest request, Fina
     return Results.Ok(OperationResponse.From(op));
 });
 
+app.MapPost("/api/operations/recoverable-expense", async (RecoverableExpenseRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var op = await service.AcceptRecoverableExpenseAsync(
+        new AcceptRecoverableExpenseCommand(
+            request.AccountId,
+            new MoneyInput(request.AmountMinorUnits, request.Currency),
+            request.CounterpartyName,
+            request.EffectiveAt.ToString("O"),
+            request.IdempotencyKey),
+        ct);
+    return Results.Ok(OperationResponse.From(op));
+});
+
+app.MapPost("/api/operations/recoverable-settlement", async (RecoverableSettlementRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var op = await service.AcceptRecoverableSettlementAsync(
+        new SettleRecoverableCommand(
+            request.AccountId,
+            request.RecoverableId,
+            new MoneyInput(request.AmountMinorUnits, request.Currency),
+            request.EffectiveAt.ToString("O"),
+            request.IdempotencyKey),
+        ct);
+    return Results.Ok(OperationResponse.From(op));
+});
+
 app.MapPost("/api/operations/transfer", async (TransferRequest request, FinanceService service, CancellationToken ct) =>
 {
     var op = await service.AcceptAsync(
@@ -90,6 +116,24 @@ app.MapPost("/api/operations/reversal", async (ReverseOperationRequest request, 
     var op = await service.AcceptReversalAsync(
         new ReverseOperationCommand(request.OriginalOperationId, request.EffectiveAt.ToString("O"), request.IdempotencyKey), ct);
     return Results.Ok(OperationResponse.From(op));
+});
+
+app.MapGet("/api/recoverables/{recoverableId:guid}", async (Guid recoverableId, FinanceService service, CancellationToken ct) =>
+{
+    var effects = await service.GetRecoverableEffectsAsync(recoverableId, ct);
+    if (effects.Count == 0) return Results.NotFound();
+
+    var balance = effects.Sum(x => x.SignedMinorUnits);
+    var first = effects.FirstOrDefault(x => x.CounterpartyName is not null);
+    return Results.Ok(new
+    {
+        recoverableId,
+        counterpartyName = first?.CounterpartyName,
+        currency = effects[0].Amount.Currency,
+        outstandingMinorUnits = balance,
+        status = balance == 0 ? "Settled" : "Outstanding",
+        effects
+    });
 });
 
 app.MapGet("/api/accounts/{accountId:guid}/balance", async (Guid accountId, IFinanceRepository repository, CancellationToken ct) =>
@@ -134,14 +178,18 @@ public partial class Program { }
 public sealed record CreateAccountRequest(string Name, AccountType Type, string Currency, long? OpeningBalanceMinorUnits);
 public sealed record AcceptIncomeRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record AcceptExpenseRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
+public sealed record RecoverableExpenseRequest(Guid AccountId, long AmountMinorUnits, string Currency, string CounterpartyName, DateTimeOffset EffectiveAt, string IdempotencyKey);
+public sealed record RecoverableSettlementRequest(Guid AccountId, Guid RecoverableId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record TransferRequest(Guid SourceAccountId, Guid DestinationAccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record ReverseOperationRequest(Guid OriginalOperationId, DateTimeOffset EffectiveAt, string IdempotencyKey);
 
-public sealed record OperationResponse(Guid Id, FinancialOperationType Type, DateTimeOffset EffectiveAt, DateTimeOffset RecordedAt, Guid? OriginalOperationId, IReadOnlyList<EffectResponse> Effects)
+public sealed record OperationResponse(Guid Id, FinancialOperationType Type, DateTimeOffset EffectiveAt, DateTimeOffset RecordedAt, Guid? OriginalOperationId, IReadOnlyList<EffectResponse> Effects, IReadOnlyList<RecoverableEffectResponse> RecoverableEffects)
 {
     public static OperationResponse From(FinancialOperation operation) =>
         new(operation.Id, operation.Type, operation.EffectiveAt, operation.RecordedAt, operation.OriginalOperationId,
-            operation.Effects.Select(e => new EffectResponse(e.Id, e.AccountId, e.Amount.MinorUnits, e.Amount.Currency, e.Direction, e.Order)).ToArray());
+            operation.Effects.Select(e => new EffectResponse(e.Id, e.AccountId, e.Amount.MinorUnits, e.Amount.Currency, e.Direction, e.Order)).ToArray(),
+            operation.RecoverableEffects.Select(e => new RecoverableEffectResponse(e.Id, e.RecoverableId, e.Amount.MinorUnits, e.Amount.Currency, e.Direction, e.CounterpartyName, e.Order)).ToArray());
 }
 
 public sealed record EffectResponse(Guid Id, Guid AccountId, long AmountMinorUnits, string Currency, EffectDirection Direction, long Order);
+public sealed record RecoverableEffectResponse(Guid Id, Guid RecoverableId, long AmountMinorUnits, string Currency, RecoverableEffectDirection Direction, string? CounterpartyName, long Order);
