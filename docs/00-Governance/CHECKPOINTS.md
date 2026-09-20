@@ -55,3 +55,30 @@ Accept the financial domain model before defining the complete invariant and tra
 
 ### Next checkpoint
 **CP-003 — Financial Invariants Decision Gate (DG-003)**
+
+## CP-003 — Financial Invariants
+**Date:** 2026-09-20  
+**Phase:** M0 — Product & Domain Foundation  
+**Status:** Completed
+
+### Objective
+Accept the mandatory financial invariants that govern authoritative financial truth before transaction implementation.
+
+### Accepted gate
+- DG-003 Financial Invariants — Accepted
+
+### Verification
+- Authoritative truth is the accepted Effect set
+- Money uses exact non-floating representation via the approved Money abstraction
+- Accepted operations/effects are atomic and immutable
+- Transfers conserve value unless explicit fees/adjustments are represented
+- Balances are deterministic, explainable, derived, and rebuildable
+- Effective and recorded time are distinguished
+- Corrections are explicit and do not silently mutate history
+- Currency behavior is explicit; no implicit conversion
+- Retries are idempotent and invalid operations cannot mutate truth
+- Recovery/rebuild preserves financial results
+- Issue #4 closed as completed
+
+### Next checkpoint
+**CP-004 — Transaction Model Decision Gate (DG-004)**
