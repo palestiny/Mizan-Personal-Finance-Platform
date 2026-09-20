@@ -1,6 +1,4 @@
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.Storage;
-using Mizan.Application.Finance;
 using Mizan.Domain.Finance;
 
 namespace Mizan.Infrastructure.Persistence;
@@ -8,7 +6,7 @@ namespace Mizan.Infrastructure.Persistence;
 public sealed class EfFinanceRepository : IFinanceRepository
 {
     private readonly MizanDbContext _db;
-    private IDbContextTransaction? _transaction;
+    private Microsoft.EntityFrameworkCore.Storage.IDbContextTransaction? _transaction;
 
     public EfFinanceRepository(MizanDbContext db) => _db = db;
 
@@ -37,24 +35,19 @@ public sealed class EfFinanceRepository : IFinanceRepository
         var op = await _db.Operations.AsNoTracking().SingleOrDefaultAsync(x => x.Id == operationId, cancellationToken);
         if (op is null) return null;
 
-        var effects = await _db.Effects.AsNoTracking()
-            .Where(x => x.OperationId == op.Id)
-            .OrderBy(x => x.Order)
-            .ToListAsync(cancellationToken);
-        return Rehydrate(op, effects, op.OriginalOperationId);
+        var effects = await _db.Effects.AsNoTracking().Where(x => x.OperationId == op.Id).OrderBy(x => x.Order).ToListAsync(cancellationToken);
+        var recoverableEffects = await _db.RecoverableEffects.AsNoTracking().Where(x => x.OperationId == op.Id).OrderBy(x => x.Order).ToListAsync(cancellationToken);
+        return Rehydrate(op, effects, recoverableEffects);
     }
 
     public async Task<FinancialOperation?> GetReversalByOriginalOperationIdAsync(Guid originalOperationId, CancellationToken cancellationToken)
     {
-        var op = await _db.Operations.AsNoTracking()
-            .SingleOrDefaultAsync(x => x.OriginalOperationId == originalOperationId, cancellationToken);
+        var op = await _db.Operations.AsNoTracking().SingleOrDefaultAsync(x => x.OriginalOperationId == originalOperationId, cancellationToken);
         if (op is null) return null;
 
-        var effects = await _db.Effects.AsNoTracking()
-            .Where(x => x.OperationId == op.Id)
-            .OrderBy(x => x.Order)
-            .ToListAsync(cancellationToken);
-        return Rehydrate(op, effects, op.OriginalOperationId);
+        var effects = await _db.Effects.AsNoTracking().Where(x => x.OperationId == op.Id).OrderBy(x => x.Order).ToListAsync(cancellationToken);
+        var recoverableEffects = await _db.RecoverableEffects.AsNoTracking().Where(x => x.OperationId == op.Id).OrderBy(x => x.Order).ToListAsync(cancellationToken);
+        return Rehydrate(op, effects, recoverableEffects);
     }
 
     public async Task<FinancialOperation?> GetOperationByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken)
@@ -64,12 +57,14 @@ public sealed class EfFinanceRepository : IFinanceRepository
 
         var op = await _db.Operations.AsNoTracking().SingleAsync(x => x.Id == key.OperationId, cancellationToken);
         var effects = await _db.Effects.AsNoTracking().Where(x => x.OperationId == op.Id).OrderBy(x => x.Order).ToListAsync(cancellationToken);
-        return Rehydrate(op, effects, op.OriginalOperationId);
+        var recoverableEffects = await _db.RecoverableEffects.AsNoTracking().Where(x => x.OperationId == op.Id).OrderBy(x => x.Order).ToListAsync(cancellationToken);
+        return Rehydrate(op, effects, recoverableEffects);
     }
 
     public Task AddAcceptedOperationAsync(FinancialOperation operation, string idempotencyKey, CancellationToken cancellationToken)
     {
         _db.Operations.Add(new OperationRecord { Id = operation.Id, Type = (int)operation.Type, EffectiveAt = operation.EffectiveAt, RecordedAt = operation.RecordedAt, OriginalOperationId = operation.OriginalOperationId });
+
         foreach (var effect in operation.Effects)
             _db.Effects.Add(new EffectRecord
             {
@@ -77,6 +72,16 @@ public sealed class EfFinanceRepository : IFinanceRepository
                 AmountMinorUnits = effect.Amount.MinorUnits, Direction = (int)effect.Direction,
                 Currency = effect.Amount.Currency, EffectiveAt = effect.EffectiveAt, RecordedAt = effect.RecordedAt, Order = effect.Order
             });
+
+        foreach (var effect in operation.RecoverableEffects)
+            _db.RecoverableEffects.Add(new RecoverableEffectRecord
+            {
+                Id = effect.Id, OperationId = effect.OperationId, RecoverableId = effect.RecoverableId,
+                AmountMinorUnits = effect.Amount.MinorUnits, Direction = (int)effect.Direction,
+                Currency = effect.Amount.Currency, CounterpartyName = effect.CounterpartyName,
+                EffectiveAt = effect.EffectiveAt, RecordedAt = effect.RecordedAt, Order = effect.Order
+            });
+
         _db.IdempotencyKeys.Add(new IdempotencyRecord { Key = idempotencyKey, OperationId = operation.Id });
         return Task.CompletedTask;
     }
@@ -88,10 +93,16 @@ public sealed class EfFinanceRepository : IFinanceRepository
         return rows.Select(ToDomain).ToArray();
     }
 
+    public async Task<IReadOnlyList<RecoverableEffect>> GetRecoverableEffectsAsync(Guid recoverableId, CancellationToken cancellationToken)
+    {
+        var rows = await _db.RecoverableEffects.AsNoTracking().Where(x => x.RecoverableId == recoverableId)
+            .OrderBy(x => x.EffectiveAt).ThenBy(x => x.RecordedAt).ThenBy(x => x.Order).ThenBy(x => x.Id).ToListAsync(cancellationToken);
+        return rows.Select(ToDomain).ToArray();
+    }
+
     public Task SaveChangesAsync(CancellationToken cancellationToken) => _db.SaveChangesAsync(cancellationToken);
 
-    public async Task BeginTransactionAsync(CancellationToken cancellationToken) =>
-        _transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken) => _transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken)
     {
@@ -109,10 +120,13 @@ public sealed class EfFinanceRepository : IFinanceRepository
         row.Status = (int)account.Status;
     }
 
-    private static FinancialOperation Rehydrate(OperationRecord op, IReadOnlyList<EffectRecord> effects, Guid? originalOperationId) =>
-        FinancialOperation.Rehydrate(op.Id, (FinancialOperationType)op.Type, op.EffectiveAt, op.RecordedAt, effects.Select(ToDomain).ToArray(), originalOperationId);
+    private static FinancialOperation Rehydrate(OperationRecord op, IReadOnlyList<EffectRecord> effects, IReadOnlyList<RecoverableEffectRecord> recoverableEffects) =>
+        FinancialOperation.Rehydrate(op.Id, (FinancialOperationType)op.Type, op.EffectiveAt, op.RecordedAt, effects.Select(ToDomain).ToArray(), recoverableEffects.Select(ToDomain).ToArray(), op.OriginalOperationId);
 
-    private static FinancialEffect ToDomain(EffectRecord row) =>
-        FinancialEffect.Rehydrate(row.Id, row.OperationId, row.AccountId, Money.FromMinorUnits(row.AmountMinorUnits, row.Currency),
-            (EffectDirection)row.Direction, row.EffectiveAt, row.RecordedAt, row.Order);
+    private static FinancialEffect ToDomain(EffectRecord row) => FinancialEffect.Rehydrate(row.Id, row.OperationId, row.AccountId, Money.FromMinorUnits(row.AmountMinorUnits, row.Currency),
+        (EffectDirection)row.Direction, row.EffectiveAt, row.RecordedAt, row.Order);
+
+    private static RecoverableEffect ToDomain(RecoverableEffectRecord row) => RecoverableEffect.Rehydrate(row.Id, row.OperationId, row.RecoverableId,
+        Money.FromMinorUnits(row.AmountMinorUnits, row.Currency), (RecoverableEffectDirection)row.Direction, row.CounterpartyName,
+        row.EffectiveAt, row.RecordedAt, row.Order);
 }
