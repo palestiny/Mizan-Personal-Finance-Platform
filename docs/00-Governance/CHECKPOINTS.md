@@ -152,3 +152,16 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Verification status:** Implementation committed to GitHub; CI runtime result not yet verified because workflow execution has not yet been reported by the GitHub connector.
 - **Known follow-up:** Generate and commit the first versioned EF Core migration; then verify CI and harden idempotency conflict/concurrency behavior.
 - **Issue:** #11
+
+
+## CP-010 — M1 Runtime Verification and Idempotency Hardening
+- **Status:** Completed
+- **Date:** 2026-09-21
+- **Phase:** M1 — Thin Vertical Slice Implementation
+- **Objective:** Verify the real PostgreSQL-backed vertical slice in GitHub CI and close the remaining idempotency semantic gap in the test harness.
+- **Verified:** Build, committed EF Core migration application against PostgreSQL, full test suite, API financial flow, retry idempotency, conflicting-key behavior, concurrent duplicate protection, atomicity, deterministic history/explanation, and balance rebuildability.
+- **CI:** Runs #105, #106, #107, and #108 completed successfully; #108 verifies the final cross-operation idempotency harness change.
+- **Root-cause fixes completed:** compile/test API mismatches, UTC timestamp persistence normalization, duplicate test command models, and inconsistent in-memory idempotency semantics.
+- **Migration:** First versioned EF Core migration is committed and successfully applied by CI.
+- **Remaining M1 checkpoint:** documentation/acceptance closure only; no known failing runtime behavior remains in the verified slice.
+- **Next:** close M1 as a verified thin technical foundation, then move to the next approved roadmap capability without introducing unneeded architecture.
