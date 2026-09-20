@@ -31,26 +31,33 @@ public sealed class FinancialOperation
     public static FinancialOperation Rehydrate(Guid id, FinancialOperationType type, DateTimeOffset effectiveAt, DateTimeOffset recordedAt, IReadOnlyList<FinancialEffect> effects) =>
         new(id, type, effectiveAt, recordedAt, effects.ToImmutableArray());
 
-    public static OperationBuilder Income(Guid accountId, Money amount, DateTimeOffset effectiveAt) =>
-        new(FinancialOperationType.Income, effectiveAt, (id, recordedAt) =>
-            new FinancialOperation(id, FinancialOperationType.Income, effectiveAt, recordedAt,
-                ImmutableArray.Create(CreateEffect(id, accountId, amount, EffectDirection.Increase, effectiveAt, recordedAt, 0))));
+    public static OperationBuilder Income(Guid accountId, Money amount, DateTimeOffset effectiveAt)
+    {
+        var normalizedEffectiveAt = effectiveAt.ToUniversalTime();
+        return new(FinancialOperationType.Income, normalizedEffectiveAt, (id, recordedAt) =>
+            new FinancialOperation(id, FinancialOperationType.Income, normalizedEffectiveAt, recordedAt,
+                ImmutableArray.Create(CreateEffect(id, accountId, amount, EffectDirection.Increase, normalizedEffectiveAt, recordedAt, 0))));
+    }
 
-    public static OperationBuilder PersonalExpense(Guid accountId, Money amount, DateTimeOffset effectiveAt) =>
-        new(FinancialOperationType.PersonalExpense, effectiveAt, (id, recordedAt) =>
-            new FinancialOperation(id, FinancialOperationType.PersonalExpense, effectiveAt, recordedAt,
-                ImmutableArray.Create(CreateEffect(id, accountId, amount, EffectDirection.Decrease, effectiveAt, recordedAt, 0))));
+    public static OperationBuilder PersonalExpense(Guid accountId, Money amount, DateTimeOffset effectiveAt)
+    {
+        var normalizedEffectiveAt = effectiveAt.ToUniversalTime();
+        return new(FinancialOperationType.PersonalExpense, normalizedEffectiveAt, (id, recordedAt) =>
+            new FinancialOperation(id, FinancialOperationType.PersonalExpense, normalizedEffectiveAt, recordedAt,
+                ImmutableArray.Create(CreateEffect(id, accountId, amount, EffectDirection.Decrease, normalizedEffectiveAt, recordedAt, 0))));
+    }
 
     public static OperationBuilder OwnedAccountTransfer(Guid sourceAccountId, Guid destinationAccountId, Money amount, DateTimeOffset effectiveAt)
     {
         if (sourceAccountId == destinationAccountId)
             throw new DomainValidationException("Transfer source and destination must differ.");
 
-        return new OperationBuilder(FinancialOperationType.OwnedAccountTransfer, effectiveAt, (id, recordedAt) =>
-            new FinancialOperation(id, FinancialOperationType.OwnedAccountTransfer, effectiveAt, recordedAt,
+        var normalizedEffectiveAt = effectiveAt.ToUniversalTime();
+        return new OperationBuilder(FinancialOperationType.OwnedAccountTransfer, normalizedEffectiveAt, (id, recordedAt) =>
+            new FinancialOperation(id, FinancialOperationType.OwnedAccountTransfer, normalizedEffectiveAt, recordedAt,
                 ImmutableArray.Create(
-                    CreateEffect(id, sourceAccountId, amount, EffectDirection.Decrease, effectiveAt, recordedAt, 0),
-                    CreateEffect(id, destinationAccountId, amount, EffectDirection.Increase, effectiveAt, recordedAt, 1))));
+                    CreateEffect(id, sourceAccountId, amount, EffectDirection.Decrease, normalizedEffectiveAt, recordedAt, 0),
+                    CreateEffect(id, destinationAccountId, amount, EffectDirection.Increase, normalizedEffectiveAt, recordedAt, 1))));
     }
 
     private static FinancialEffect CreateEffect(Guid operationId, Guid accountId, Money amount, EffectDirection direction, DateTimeOffset effectiveAt, DateTimeOffset recordedAt, long order)
