@@ -32,11 +32,6 @@ namespace Mizan.Infrastructure.Migrations
                 b.ToTable("accounts", (string)null);
             });
 
-            modelBuilder.Entity("Mizan.Infrastructure.Persistence.OperationRecord", b =>
-            {
-                b.HasOne("Mizan.Infrastructure.Persistence.OperationRecord", null).WithMany().HasForeignKey("OriginalOperationId").OnDelete(DeleteBehavior.Restrict);
-            });
-
             modelBuilder.Entity("Mizan.Infrastructure.Persistence.EffectRecord", b =>
             {
                 b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
@@ -71,13 +66,41 @@ namespace Mizan.Infrastructure.Migrations
                 b.Property<DateTimeOffset>("RecordedAt").HasColumnType("timestamp with time zone");
                 b.Property<int>("Type").HasColumnType("integer");
                 b.HasKey("Id");
-                b.HasIndex("OriginalOperationId").IsUnique().HasFilter("\"OriginalOperationId\" IS NOT NULL");
+                b.HasIndex("OriginalOperationId").IsUnique().HasFilter(""OriginalOperationId" IS NOT NULL");
                 b.ToTable("financial_operations", (string)null);
+            });
+
+            modelBuilder.Entity("Mizan.Infrastructure.Persistence.RecoverableEffectRecord", b =>
+            {
+                b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
+                b.Property<long>("AmountMinorUnits").HasColumnType("bigint");
+                b.Property<string>("CounterpartyName").HasMaxLength(200).HasColumnType("character varying(200)");
+                b.Property<string>("Currency").IsRequired().HasMaxLength(3).HasColumnType("character varying(3)");
+                b.Property<int>("Direction").HasColumnType("integer");
+                b.Property<DateTimeOffset>("EffectiveAt").HasColumnType("timestamp with time zone");
+                b.Property<Guid>("OperationId").HasColumnType("uuid");
+                b.Property<long>("Order").HasColumnType("bigint");
+                b.Property<DateTimeOffset>("RecordedAt").HasColumnType("timestamp with time zone");
+                b.Property<Guid>("RecoverableId").HasColumnType("uuid");
+                b.HasKey("Id");
+                b.HasIndex("OperationId");
+                b.HasIndex("RecoverableId", "EffectiveAt", "RecordedAt", "Order", "Id");
+                b.ToTable("recoverable_effects", (string)null);
             });
 
             modelBuilder.Entity("Mizan.Infrastructure.Persistence.EffectRecord", b =>
             {
                 b.HasOne("Mizan.Infrastructure.Persistence.AccountRecord", null).WithMany().HasForeignKey("AccountId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+                b.HasOne("Mizan.Infrastructure.Persistence.OperationRecord", null).WithMany().HasForeignKey("OperationId").OnDelete(DeleteBehavior.Restrict).IsRequired();
+            });
+
+            modelBuilder.Entity("Mizan.Infrastructure.Persistence.OperationRecord", b =>
+            {
+                b.HasOne("Mizan.Infrastructure.Persistence.OperationRecord", null).WithMany().HasForeignKey("OriginalOperationId").OnDelete(DeleteBehavior.Restrict);
+            });
+
+            modelBuilder.Entity("Mizan.Infrastructure.Persistence.RecoverableEffectRecord", b =>
+            {
                 b.HasOne("Mizan.Infrastructure.Persistence.OperationRecord", null).WithMany().HasForeignKey("OperationId").OnDelete(DeleteBehavior.Restrict).IsRequired();
             });
 #pragma warning restore 612, 618
