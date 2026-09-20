@@ -12,6 +12,12 @@ builder.Services.AddScoped<FinanceService>();
 
 var app = builder.Build();
 
+if (app.Environment.IsEnvironment("Testing"))
+{
+    using var scope = app.Services.CreateScope();
+    await scope.ServiceProvider.GetRequiredService<MizanDbContext>().Database.EnsureCreatedAsync();
+}
+
 app.MapGet("/", () => Results.Ok(new { service = "Mizan", status = "ok" }));
 
 app.MapPost("/api/accounts", async (CreateAccountRequest request, FinanceService service, CancellationToken ct) =>
@@ -54,7 +60,7 @@ app.MapGet("/api/accounts/{accountId:guid}/balance", async (Guid accountId, IFin
 
     var effects = await repository.GetEffectsAsync(accountId, ct);
     var balance = Balance.Derive(account, effects);
-    return Results.Ok(new { accountId, currency = balance.Currency, minorUnits = balance.MinorUnits });
+    return Results.Ok(new { accountId, currency = balance.Currency, AmountMinorUnits = balance.MinorUnits });
 });
 
 app.MapGet("/api/accounts/{accountId:guid}/history", async (Guid accountId, IFinanceRepository repository, CancellationToken ct) =>
