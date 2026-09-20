@@ -4,7 +4,7 @@
 **M1 — Thin Vertical Slice Implementation**
 
 ## Current state
-**Status:** M1 implementation verified; closure checkpoint pending Product Owner acceptance.  
+**Status: M2 explicit reversal implementation verified in GitHub CI; next M2 capability not yet opened behind a design gate
 **Production implementation:** domain foundation + EF Core/PostgreSQL persistence boundary + thin API path implemented; committed EF migration and real CI verification are complete.
 
 ## Accepted product and strategy gates
@@ -100,3 +100,12 @@ Complete the M1 closure checkpoint. The required rebuildability behavior is alre
 
 ## Verification rule
 A document is not treated as approved merely because it exists. Gate status and decision records must reflect explicit Product Owner acceptance.
+
+
+## Latest M2 verification
+- Explicit Reversal is implemented and runtime-verified.
+- GitHub Actions run #127 is GREEN.
+- PostgreSQL migration discovery/application is verified.
+- Domain, Application, and API verification are GREEN.
+- No known failing reversal behavior remains.
+- The next M2 capability remains intentionally unopened until its concrete semantics require a design gate.
