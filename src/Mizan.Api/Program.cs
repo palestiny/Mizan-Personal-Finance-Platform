@@ -1,8 +1,101 @@
+using Microsoft.EntityFrameworkCore;
+using Mizan.Application.Finance;
+using Mizan.Domain.Finance;
+using Mizan.Infrastructure.Persistence;
+
 var builder = WebApplication.CreateBuilder(args);
+
+builder.Services.AddDbContext<MizanDbContext>(options =>
+    options.UseNpgsql(builder.Configuration.GetConnectionString("Mizan") ?? "Host=localhost;Database=mizan;Username=postgres;Password=postgres"));
+builder.Services.AddScoped<IFinanceRepository, EfFinanceRepository>();
+builder.Services.AddScoped<FinanceService>();
+
 var app = builder.Build();
 
-app.MapGet("/", () => Results.Ok(new { service = "Mizan.Api", status = "foundation" }));
+app.MapGet("/", () => Results.Ok(new { service = "Mizan", status = "ok" }));
+
+app.MapPost("/api/accounts", async (CreateAccountRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var account = await service.CreateAccountAsync(
+        request.Name, request.Type, request.Currency,
+        request.OpeningBalanceMinorUnits is null ? null : Money.FromMinorUnits(request.OpeningBalanceMinorUnits.Value, request.Currency),
+        ct);
+    return Results.Created($"/api/accounts/{account.Id}", new { account.Id, account.Name, account.Type, account.Currency });
+});
+
+app.MapPost("/api/operations/income", async (AcceptIncomeRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var op = await service.AcceptAsync(
+        FinancialOperation.Income(request.AccountId, Money.FromMinorUnits(request.AmountMinorUnits, request.Currency), request.EffectiveAt),
+        request.IdempotencyKey, ct);
+    return Results.Ok(OperationResponse.From(op));
+});
+
+app.MapPost("/api/operations/expense", async (AcceptExpenseRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var op = await service.AcceptAsync(
+        FinancialOperation.PersonalExpense(request.AccountId, Money.FromMinorUnits(request.AmountMinorUnits, request.Currency), request.EffectiveAt),
+        request.IdempotencyKey, ct);
+    return Results.Ok(OperationResponse.From(op));
+});
+
+app.MapPost("/api/operations/transfer", async (TransferRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var op = await service.AcceptAsync(
+        FinancialOperation.OwnedAccountTransfer(request.SourceAccountId, request.DestinationAccountId, Money.FromMinorUnits(request.AmountMinorUnits, request.Currency), request.EffectiveAt),
+        request.IdempotencyKey, ct);
+    return Results.Ok(OperationResponse.From(op));
+});
+
+app.MapGet("/api/accounts/{accountId:guid}/balance", async (Guid accountId, IFinanceRepository repository, CancellationToken ct) =>
+{
+    var account = await repository.GetAccountAsync(accountId, ct);
+    if (account is null) return Results.NotFound();
+
+    var effects = await repository.GetEffectsAsync(accountId, ct);
+    var balance = Balance.Derive(account, effects);
+    return Results.Ok(new { accountId, currency = balance.Currency, minorUnits = balance.MinorUnits });
+});
+
+app.MapGet("/api/accounts/{accountId:guid}/history", async (Guid accountId, IFinanceRepository repository, CancellationToken ct) =>
+{
+    var account = await repository.GetAccountAsync(accountId, ct);
+    if (account is null) return Results.NotFound();
+
+    var effects = await repository.GetEffectsAsync(accountId, ct);
+    return Results.Ok(effects);
+});
+
+app.MapGet("/api/accounts/{accountId:guid}/balance/explanation", async (Guid accountId, IFinanceRepository repository, CancellationToken ct) =>
+{
+    var account = await repository.GetAccountAsync(accountId, ct);
+    if (account is null) return Results.NotFound();
+
+    var effects = await repository.GetEffectsAsync(accountId, ct);
+    var balance = Balance.Derive(account, effects);
+    return Results.Ok(new
+    {
+        accountId,
+        currency = balance.Currency,
+        minorUnits = balance.MinorUnits,
+        explanation = effects.Select(x => new { x.Id, x.OperationId, x.Direction, x.Amount.MinorUnits, x.EffectiveAt, x.RecordedAt, x.Order }).ToArray()
+    });
+});
 
 app.Run();
 
 public partial class Program { }
+
+public sealed record CreateAccountRequest(string Name, AccountType Type, string Currency, long? OpeningBalanceMinorUnits);
+public sealed record AcceptIncomeRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
+public sealed record AcceptExpenseRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
+public sealed record TransferRequest(Guid SourceAccountId, Guid DestinationAccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
+
+public sealed record OperationResponse(Guid Id, FinancialOperationType Type, DateTimeOffset EffectiveAt, DateTimeOffset RecordedAt, IReadOnlyList<EffectResponse> Effects)
+{
+    public static OperationResponse From(FinancialOperation operation) =>
+        new(operation.Id, operation.Type, operation.EffectiveAt, operation.RecordedAt,
+            operation.Effects.Select(e => new EffectResponse(e.Id, e.AccountId, e.Amount.MinorUnits, e.Amount.Currency, e.Direction, e.Order)).ToArray());
+}
+
+public sealed record EffectResponse(Guid Id, Guid AccountId, long AmountMinorUnits, string Currency, EffectDirection Direction, long Order);
