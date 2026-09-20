@@ -5,7 +5,7 @@
 
 ## Current state
 **Status:** In progress  
-**Production implementation:** RED-test suite established; minimal domain model implemented; application/persistence path is next.
+**Production implementation:** domain foundation + EF Core/PostgreSQL persistence boundary + thin API path implemented; real CI verification and first versioned EF migration remain.
 
 ## Accepted product and strategy gates
 - **DG-001 Product Scope:** Accepted
@@ -34,7 +34,7 @@ The accepted direction is Mizan as a globally applicable Personal Financial Oper
 | Runtime technology | **Accepted** |
 | Production structure | Established |
 | RED tests | **Established** |
-| Minimal domain implementation | **Started / core types implemented** |
+| Minimal domain implementation | **Implemented for M1 core** |
 
 ## Accepted domain foundation
 **Operation + Effect** is the authoritative financial model.
@@ -51,7 +51,7 @@ The repository now contains the accepted modular-monolith project boundaries:
 - `tests/Mizan.Application.Tests`
 - `tests/Mizan.Api.Tests`
 
-The implementation target is .NET 8 for the first slice, preserving the accepted ASP.NET Core/.NET decision without introducing a new product architecture decision.
+The implementation target is .NET 8 for the first slice, preserving the accepted ASP.NET Core/.NET decision without introducing a new product architecture decision. EF Core + Npgsql persistence is now wired behind the accepted persistence boundary.
 
 ## RED-test coverage established
 The RED suite specifies:
@@ -83,8 +83,20 @@ The GitHub Actions workflow `.github/workflows/m1-tests.yml` was added to execut
 - No advanced autonomous financial actions without explicit authorization/policy/auditability.
 - Pricing and packaging remain validation questions.
 
+## Current implementation checkpoint
+The production path now contains:
+- application finance repository/service contracts;
+- EF Core PostgreSQL DbContext and persistence records;
+- atomic accepted Operation + Effect + idempotency persistence transaction boundary;
+- balance/history/explanation reads derived from authoritative Effects;
+- thin HTTP endpoints for account creation, income, expense, transfer, balance, history, and explanation;
+- CI PostgreSQL service configuration for integration verification.
+
+A temporary EnsureCreated path is restricted to the Testing environment. It is not the production migration strategy. The accepted EF Core migration strategy still requires the first committed versioned migration.
+
 ## Next action
-Proceed with the **minimum application + persistence implementation required to turn the established domain/application RED tests GREEN**, then complete the real API path. Do not add architecture that the accepted slice does not require.
+Run and verify the real CI suite, resolve any compile/runtime failures by root cause, then generate and commit the first EF Core migration and harden idempotency conflict/concurrency semantics. Do not add architecture that the accepted slice does not require.
+
 
 ## Verification rule
 A document is not treated as approved merely because it exists. Gate status and decision records must reflect explicit Product Owner acceptance.
