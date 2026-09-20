@@ -79,6 +79,88 @@ public sealed class FinanceService
         }
     }
 
+    public async Task<FinancialOperation> AcceptRecoverableExpenseAsync(AcceptRecoverableExpenseCommand command, CancellationToken cancellationToken) =>
+        await AcceptAsync(
+            FinancialOperation.RecoverableExpense(
+                command.AccountId,
+                Money.FromMinorUnits(command.Amount.MinorUnits, command.Amount.Currency),
+                command.CounterpartyName,
+                Parse(command.EffectiveAt)),
+            command.IdempotencyKey,
+            cancellationToken);
+
+    public async Task<FinancialOperation> AcceptRecoverableSettlementAsync(SettleRecoverableCommand command, CancellationToken cancellationToken)
+    {
+        if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
+            throw new DomainValidationException("Idempotency key is required.");
+
+        var existing = await _repository.GetOperationByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
+        var effectiveAt = Parse(command.EffectiveAt);
+        var amount = Money.FromMinorUnits(command.Amount.MinorUnits, command.Amount.Currency);
+        var candidate = FinancialOperation.RecoverableSettlement(command.AccountId, command.RecoverableId, amount, effectiveAt).Accept();
+
+        if (existing is not null)
+        {
+            if (!SemanticallyMatches(existing, candidate))
+                throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
+            return existing;
+        }
+
+        Exception? lastFailure = null;
+
+        for (var attempt = 1; attempt <= 3; attempt++)
+        {
+            await _repository.BeginTransactionAsync(cancellationToken, System.Data.IsolationLevel.Serializable);
+            try
+            {
+                var recoverableEffects = await _repository.GetRecoverableEffectsAsync(command.RecoverableId, cancellationToken);
+                if (recoverableEffects.Count == 0)
+                    throw new DomainValidationException("Recoverable was not found.");
+
+                var currency = recoverableEffects[0].Amount.Currency;
+                if (!string.Equals(currency, amount.Currency, StringComparison.OrdinalIgnoreCase))
+                    throw new DomainValidationException("Settlement currency must match recoverable currency.");
+
+                var outstanding = checked(recoverableEffects.Sum(x => x.SignedMinorUnits));
+                if (amount.MinorUnits > outstanding)
+                    throw new DomainValidationException("Settlement amount cannot exceed the outstanding recoverable amount.");
+
+                await ValidateActiveAccountsAsync(candidate, cancellationToken);
+                await _repository.AddAcceptedOperationAsync(candidate, command.IdempotencyKey, cancellationToken);
+                await _repository.SaveChangesAsync(cancellationToken);
+                await _repository.CommitTransactionAsync(cancellationToken);
+                return candidate;
+            }
+            catch (Exception ex)
+            {
+                lastFailure = ex;
+                await _repository.RollbackTransactionAsync(cancellationToken);
+
+                var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
+                if (concurrent is not null)
+                {
+                    if (!SemanticallyMatches(concurrent, candidate))
+                        throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
+                    return concurrent;
+                }
+
+                if (ex is DomainValidationException or IdempotencyConflictException)
+                    throw;
+
+                var latestEffects = await _repository.GetRecoverableEffectsAsync(command.RecoverableId, cancellationToken);
+                if (latestEffects.Count > 0 && amount.MinorUnits > latestEffects.Sum(x => x.SignedMinorUnits))
+                    throw new DomainValidationException("Settlement amount cannot exceed the outstanding recoverable amount.");
+
+                if (attempt < 3)
+                    continue;
+            }
+        }
+
+        throw lastFailure ?? new InvalidOperationException("Recoverable settlement failed.");
+    }
+
     public async Task<FinancialOperation> AcceptReversalAsync(ReverseOperationCommand command, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
@@ -119,9 +201,7 @@ public sealed class FinanceService
             var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
             if (concurrent is not null)
             {
-                if (concurrent.Type != operation.Type ||
-                    concurrent.OriginalOperationId != operation.OriginalOperationId ||
-                    concurrent.EffectiveAt != operation.EffectiveAt)
+                if (!SemanticallyMatches(concurrent, operation))
                     throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
 
                 return concurrent;
@@ -137,6 +217,9 @@ public sealed class FinanceService
 
     public async Task<IReadOnlyList<FinancialEffect>> GetEffectsAsync(Guid accountId, CancellationToken cancellationToken) =>
         await _repository.GetEffectsAsync(accountId, cancellationToken);
+
+    public async Task<IReadOnlyList<RecoverableEffect>> GetRecoverableEffectsAsync(Guid recoverableId, CancellationToken cancellationToken) =>
+        await _repository.GetRecoverableEffectsAsync(recoverableId, cancellationToken);
 
     private async Task ValidateActiveAccountsAsync(FinancialOperation operation, CancellationToken cancellationToken)
     {
@@ -158,10 +241,11 @@ public sealed class FinanceService
         if (existing.Type != candidate.Type ||
             existing.EffectiveAt != candidate.EffectiveAt ||
             existing.Effects.Count != candidate.Effects.Count ||
+            existing.RecoverableEffects.Count != candidate.RecoverableEffects.Count ||
             existing.OriginalOperationId != candidate.OriginalOperationId)
             return false;
 
-        return existing.Effects
+        var effectsMatch = existing.Effects
             .OrderBy(x => x.Order)
             .Zip(candidate.Effects.OrderBy(x => x.Order))
             .All(pair =>
@@ -170,5 +254,18 @@ public sealed class FinanceService
                 pair.First.Direction == pair.Second.Direction &&
                 pair.First.Order == pair.Second.Order &&
                 pair.First.EffectiveAt == pair.Second.EffectiveAt);
+
+        if (!effectsMatch)
+            return false;
+
+        return existing.RecoverableEffects
+            .OrderBy(x => x.Order)
+            .Zip(candidate.RecoverableEffects.OrderBy(x => x.Order))
+            .All(pair =>
+                pair.First.RecoverableId == pair.Second.RecoverableId ||
+                (existing.Type == FinancialOperationType.RecoverableExpense && candidate.Type == FinancialOperationType.RecoverableExpense &&
+                 pair.First.Direction == pair.Second.Direction &&
+                 pair.First.Amount == pair.Second.Amount &&
+                 string.Equals(pair.First.CounterpartyName, pair.Second.CounterpartyName, StringComparison.Ordinal)));
     }
 }

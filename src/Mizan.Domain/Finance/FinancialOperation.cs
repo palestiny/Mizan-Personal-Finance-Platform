@@ -7,12 +7,14 @@ public enum FinancialOperationType
     Income,
     PersonalExpense,
     OwnedAccountTransfer,
-    Reversal
+    Reversal,
+    RecoverableExpense,
+    RecoverableSettlement
 }
 
 public sealed class FinancialOperation
 {
-    private FinancialOperation(Guid id, FinancialOperationType type, DateTimeOffset effectiveAt, DateTimeOffset recordedAt, IReadOnlyList<FinancialEffect> effects, Guid? originalOperationId = null)
+    private FinancialOperation(Guid id, FinancialOperationType type, DateTimeOffset effectiveAt, DateTimeOffset recordedAt, IReadOnlyList<FinancialEffect> effects, IReadOnlyList<RecoverableEffect>? recoverableEffects = null, Guid? originalOperationId = null)
     {
         Id = id;
         Type = type;
@@ -20,6 +22,7 @@ public sealed class FinancialOperation
         RecordedAt = recordedAt;
         OriginalOperationId = originalOperationId;
         Effects = effects;
+        RecoverableEffects = recoverableEffects ?? ImmutableArray<RecoverableEffect>.Empty;
         IsImmutable = true;
     }
 
@@ -29,10 +32,11 @@ public sealed class FinancialOperation
     public DateTimeOffset RecordedAt { get; }
     public Guid? OriginalOperationId { get; }
     public IReadOnlyList<FinancialEffect> Effects { get; }
+    public IReadOnlyList<RecoverableEffect> RecoverableEffects { get; }
     public bool IsImmutable { get; }
 
-    public static FinancialOperation Rehydrate(Guid id, FinancialOperationType type, DateTimeOffset effectiveAt, DateTimeOffset recordedAt, IReadOnlyList<FinancialEffect> effects, Guid? originalOperationId = null) =>
-        new(id, type, effectiveAt, recordedAt, effects.ToImmutableArray(), originalOperationId);
+    public static FinancialOperation Rehydrate(Guid id, FinancialOperationType type, DateTimeOffset effectiveAt, DateTimeOffset recordedAt, IReadOnlyList<FinancialEffect> effects, IReadOnlyList<RecoverableEffect>? recoverableEffects = null, Guid? originalOperationId = null) =>
+        new(id, type, effectiveAt, recordedAt, effects.ToImmutableArray(), (recoverableEffects ?? Array.Empty<RecoverableEffect>()).ToImmutableArray(), originalOperationId);
 
     public static OperationBuilder Income(Guid accountId, Money amount, DateTimeOffset effectiveAt)
     {
@@ -50,6 +54,41 @@ public sealed class FinancialOperation
                 ImmutableArray.Create(CreateEffect(id, accountId, amount, EffectDirection.Decrease, normalizedEffectiveAt, recordedAt, 0))));
     }
 
+    public static OperationBuilder RecoverableExpense(Guid accountId, Money amount, string counterpartyName, DateTimeOffset effectiveAt)
+    {
+        if (string.IsNullOrWhiteSpace(counterpartyName))
+            throw new DomainValidationException("Recoverable counterparty name is required.");
+
+        var normalizedEffectiveAt = effectiveAt.ToUniversalTime();
+        return new OperationBuilder(FinancialOperationType.RecoverableExpense, normalizedEffectiveAt, (id, recordedAt) =>
+        {
+            var recoverableId = Guid.NewGuid();
+            return new FinancialOperation(
+                id,
+                FinancialOperationType.RecoverableExpense,
+                normalizedEffectiveAt,
+                recordedAt,
+                ImmutableArray.Create(CreateEffect(id, accountId, amount, EffectDirection.Decrease, normalizedEffectiveAt, recordedAt, 0)),
+                ImmutableArray.Create(new RecoverableEffect(Guid.NewGuid(), id, recoverableId, amount, RecoverableEffectDirection.Increase, counterpartyName.Trim(), normalizedEffectiveAt, recordedAt, 0)));
+        });
+    }
+
+    public static OperationBuilder RecoverableSettlement(Guid accountId, Guid recoverableId, Money amount, DateTimeOffset effectiveAt)
+    {
+        if (recoverableId == Guid.Empty)
+            throw new DomainValidationException("Recoverable id is required.");
+
+        var normalizedEffectiveAt = effectiveAt.ToUniversalTime();
+        return new OperationBuilder(FinancialOperationType.RecoverableSettlement, normalizedEffectiveAt, (id, recordedAt) =>
+            new FinancialOperation(
+                id,
+                FinancialOperationType.RecoverableSettlement,
+                normalizedEffectiveAt,
+                recordedAt,
+                ImmutableArray.Create(CreateEffect(id, accountId, amount, EffectDirection.Increase, normalizedEffectiveAt, recordedAt, 0)),
+                ImmutableArray.Create(new RecoverableEffect(Guid.NewGuid(), id, recoverableId, amount, RecoverableEffectDirection.Decrease, null, normalizedEffectiveAt, recordedAt, 0))));
+    }
+
     public static OperationBuilder Reversal(FinancialOperation original, DateTimeOffset effectiveAt)
     {
         if (original.Type == FinancialOperationType.Reversal)
@@ -64,14 +103,11 @@ public sealed class FinancialOperation
                 recordedAt,
                 original.Effects
                     .OrderBy(x => x.Order)
-                    .Select(x => CreateEffect(
-                        id,
-                        x.AccountId,
-                        x.Amount,
-                        x.Direction == EffectDirection.Increase ? EffectDirection.Decrease : EffectDirection.Increase,
-                        normalizedEffectiveAt,
-                        recordedAt,
-                        x.Order))
+                    .Select(x => CreateEffect(id, x.AccountId, x.Amount, x.Direction == EffectDirection.Increase ? EffectDirection.Decrease : EffectDirection.Increase, normalizedEffectiveAt, recordedAt, x.Order))
+                    .ToImmutableArray(),
+                original.RecoverableEffects
+                    .OrderBy(x => x.Order)
+                    .Select(x => new RecoverableEffect(Guid.NewGuid(), id, x.RecoverableId, x.Amount, x.Direction == RecoverableEffectDirection.Increase ? RecoverableEffectDirection.Decrease : RecoverableEffectDirection.Increase, null, normalizedEffectiveAt, recordedAt, x.Order))
                     .ToImmutableArray(),
                 original.Id));
     }

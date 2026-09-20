@@ -198,6 +198,122 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
         balance!.AmountMinorUnits.Should().Be(1000);
     }
 
+
+    [Fact]
+    public async Task Api_should_create_and_settle_recoverable_partially()
+    {
+        var account = await CreateAccountAsync("Recoverable Cash", 5000);
+
+        var created = await _client.PostAsJsonAsync("/api/operations/recoverable-expense", new
+        {
+            accountId = account.Id,
+            amountMinorUnits = 1000,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "recoverable-expense-1"
+        });
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+        var original = await created.Content.ReadFromJsonAsync<OperationResponse>();
+        original!.Type.Should().Be("RecoverableExpense");
+        original.RecoverableEffects.Should().ContainSingle();
+        var recoverableId = original.RecoverableEffects[0].RecoverableId;
+
+        var afterExpense = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        afterExpense!.AmountMinorUnits.Should().Be(4000);
+
+        var settlement = await _client.PostAsJsonAsync("/api/operations/recoverable-settlement", new
+        {
+            accountId = account.Id,
+            recoverableId,
+            amountMinorUnits = 400,
+            currency = "EGP",
+            effectiveAt = "2026-09-22T10:00:00+03:00",
+            idempotencyKey = "recoverable-settlement-1"
+        });
+        settlement.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var recoverable = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
+        recoverable!.OutstandingMinorUnits.Should().Be(600);
+        recoverable.Status.Should().Be("Outstanding");
+
+        var afterSettlement = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        afterSettlement!.AmountMinorUnits.Should().Be(4400);
+    }
+
+    [Fact]
+    public async Task Api_should_prevent_concurrent_over_settlement()
+    {
+        var account = await CreateAccountAsync("Recoverable Concurrent", 5000);
+        var created = await _client.PostAsJsonAsync("/api/operations/recoverable-expense", new
+        {
+            accountId = account.Id, amountMinorUnits = 1000, currency = "EGP",
+            counterpartyName = "Ahmed", effectiveAt = "2026-09-21T10:00:00+03:00", idempotencyKey = "recoverable-concurrent-expense"
+        });
+        var original = await created.Content.ReadFromJsonAsync<OperationResponse>();
+        var recoverableId = original!.RecoverableEffects[0].RecoverableId;
+
+        var requests = Enumerable.Range(1, 2).Select(i => _client.PostAsJsonAsync("/api/operations/recoverable-settlement", new
+        {
+            accountId = account.Id, recoverableId, amountMinorUnits = 600, currency = "EGP",
+            effectiveAt = $"2026-09-21T10:0{i}:00+03:00", idempotencyKey = $"recoverable-concurrent-settlement-{i}"
+        }));
+
+        var responses = await Task.WhenAll(requests);
+
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.OK);
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.BadRequest);
+
+        var recoverable = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
+        recoverable!.OutstandingMinorUnits.Should().Be(400);
+    }
+
+    [Fact]
+    public async Task Api_should_reject_recoverable_over_settlement()
+    {
+        var account = await CreateAccountAsync("Recoverable Over", 5000);
+        var created = await _client.PostAsJsonAsync("/api/operations/recoverable-expense", new
+        {
+            accountId = account.Id, amountMinorUnits = 1000, currency = "EGP",
+            counterpartyName = "Ahmed", effectiveAt = "2026-09-21T10:00:00+03:00", idempotencyKey = "recoverable-over-1"
+        });
+        var original = await created.Content.ReadFromJsonAsync<OperationResponse>();
+        var recoverableId = original!.RecoverableEffects[0].RecoverableId;
+
+        var settlement = await _client.PostAsJsonAsync("/api/operations/recoverable-settlement", new
+        {
+            accountId = account.Id, recoverableId, amountMinorUnits = 1001, currency = "EGP",
+            effectiveAt = "2026-09-22T10:00:00+03:00", idempotencyKey = "recoverable-over-2"
+        });
+
+        settlement.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Api_should_allow_reversal_of_recoverable_expense()
+    {
+        var account = await CreateAccountAsync("Recoverable Reversal", 5000);
+        var created = await _client.PostAsJsonAsync("/api/operations/recoverable-expense", new
+        {
+            accountId = account.Id, amountMinorUnits = 1000, currency = "EGP",
+            counterpartyName = "Ahmed", effectiveAt = "2026-09-21T10:00:00+03:00", idempotencyKey = "recoverable-reversal-1"
+        });
+        var original = await created.Content.ReadFromJsonAsync<OperationResponse>();
+
+        var reversal = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = original!.Id, effectiveAt = "2026-09-22T10:00:00+03:00", idempotencyKey = "recoverable-reversal-2"
+        });
+        reversal.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var recoverable = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{original.RecoverableEffects[0].RecoverableId}");
+        recoverable!.OutstandingMinorUnits.Should().Be(0);
+        recoverable.Status.Should().Be("Settled");
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(5000);
+    }
+
     private async Task<AccountResponse> CreateAccountAsync(string name, long? openingBalanceMinorUnits = null)
     {
         var response = await _client.PostAsJsonAsync("/api/accounts", new { name, type = "Cash", currency = "EGP", openingBalanceMinorUnits });
@@ -208,6 +324,8 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     private sealed record AccountResponse(Guid Id);
     private sealed record AccountLifecycleResponse(Guid Id, string Status);
     private sealed record BalanceResponse(long AmountMinorUnits, string Status);
-    private sealed record OperationResponse(Guid Id, string Type, Guid? OriginalOperationId, IReadOnlyList<EffectResponse> Effects);
+    private sealed record OperationResponse(Guid Id, string Type, Guid? OriginalOperationId, IReadOnlyList<EffectResponse> Effects, IReadOnlyList<RecoverableEffectResponse> RecoverableEffects);
     private sealed record EffectResponse(Guid Id, Guid AccountId, long AmountMinorUnits, string Currency, string Direction, long Order);
+    private sealed record RecoverableEffectResponse(Guid Id, Guid RecoverableId, long AmountMinorUnits, string Currency, string Direction, string? CounterpartyName, long Order);
+    private sealed record RecoverableResponse(Guid RecoverableId, string? CounterpartyName, string Currency, long OutstandingMinorUnits, string Status, IReadOnlyList<RecoverableEffectResponse> Effects);
 }

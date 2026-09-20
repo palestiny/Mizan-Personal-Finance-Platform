@@ -11,5 +11,7 @@ public sealed record AcceptIncomeCommand(Guid AccountId, MoneyInput Amount, stri
 public sealed record AcceptExpenseCommand(Guid AccountId, MoneyInput Amount, string EffectiveAt, string IdempotencyKey);
 public sealed record TransferCommand(Guid SourceAccountId, Guid DestinationAccountId, MoneyInput Amount, string EffectiveAt, string IdempotencyKey);
 public sealed record ReverseOperationCommand(Guid OriginalOperationId, string EffectiveAt, string IdempotencyKey);
+public sealed record AcceptRecoverableExpenseCommand(Guid AccountId, MoneyInput Amount, string CounterpartyName, string EffectiveAt, string IdempotencyKey);
+public sealed record SettleRecoverableCommand(Guid AccountId, Guid RecoverableId, MoneyInput Amount, string EffectiveAt, string IdempotencyKey);
 public sealed record CloseAccountCommand(Guid AccountId);
 public sealed record ReopenAccountCommand(Guid AccountId);

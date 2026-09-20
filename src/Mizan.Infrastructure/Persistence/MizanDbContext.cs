@@ -7,6 +7,7 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
     public DbSet<AccountRecord> Accounts => Set<AccountRecord>();
     public DbSet<OperationRecord> Operations => Set<OperationRecord>();
     public DbSet<EffectRecord> Effects => Set<EffectRecord>();
+    public DbSet<RecoverableEffectRecord> RecoverableEffects => Set<RecoverableEffectRecord>();
     public DbSet<IdempotencyRecord> IdempotencyKeys => Set<IdempotencyRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
@@ -44,6 +45,18 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.Property(x => x.AmountMinorUnits).IsRequired();
             e.HasOne<OperationRecord>().WithMany().HasForeignKey(x => x.OperationId).OnDelete(DeleteBehavior.Restrict);
             e.HasOne<AccountRecord>().WithMany().HasForeignKey(x => x.AccountId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+        modelBuilder.Entity<RecoverableEffectRecord>(e =>
+        {
+            e.ToTable("recoverable_effects");
+            e.HasKey(x => x.Id);
+            e.HasIndex(x => new { x.RecoverableId, x.EffectiveAt, x.RecordedAt, x.Order, x.Id });
+            e.HasIndex(x => x.OperationId);
+            e.Property(x => x.AmountMinorUnits).IsRequired();
+            e.Property(x => x.Currency).HasMaxLength(3).IsRequired();
+            e.Property(x => x.CounterpartyName).HasMaxLength(200);
+            e.HasOne<OperationRecord>().WithMany().HasForeignKey(x => x.OperationId).OnDelete(DeleteBehavior.Restrict);
         });
 
         modelBuilder.Entity<IdempotencyRecord>(e =>
@@ -84,6 +97,20 @@ public sealed class EffectRecord
     public long AmountMinorUnits { get; set; }
     public int Direction { get; set; }
     public string Currency { get; set; } = "";
+    public DateTimeOffset EffectiveAt { get; set; }
+    public DateTimeOffset RecordedAt { get; set; }
+    public long Order { get; set; }
+}
+
+public sealed class RecoverableEffectRecord
+{
+    public Guid Id { get; set; }
+    public Guid OperationId { get; set; }
+    public Guid RecoverableId { get; set; }
+    public long AmountMinorUnits { get; set; }
+    public int Direction { get; set; }
+    public string Currency { get; set; } = "";
+    public string? CounterpartyName { get; set; }
     public DateTimeOffset EffectiveAt { get; set; }
     public DateTimeOffset RecordedAt { get; set; }
     public long Order { get; set; }
