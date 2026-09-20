@@ -10,25 +10,30 @@
 ## Accepted product and strategy gates
 - **DG-001 Product Scope:** Accepted
 - **DG-013 Product Strategy:** Accepted
+- **DG-002 Domain Model:** Accepted
 
 The accepted direction is Mizan as a globally applicable Personal Financial Operating System, with Egypt/personal use as the initial validation context. The MVP is a complete personal-finance core, while advanced intelligence and automation remain staged capabilities.
 
 ## Current design state
-
 | Area | State |
 |---|---|
 | Product vision | Established |
-| Product strategy | **Accepted strategic direction / hypotheses remain validation-driven** |
-| Product scope | **Accepted** |
-| DG-013 strategy gate | **Accepted** |
-| Domain model | Draft candidate |
+| Product strategy | Accepted strategic direction / hypotheses remain validation-driven |
+| Product scope | Accepted |
+| DG-013 strategy gate | Accepted |
+| DG-002 domain model | **Accepted** |
 | Financial invariants | Draft candidate |
 | Transaction model | Draft candidate |
 | Balance model | Not started |
 | Production code | Not started |
 
+## Accepted domain foundation
+**Operation + Effect** is the authoritative financial model.
+
+Evidence and Proposal are surrounding concepts. Evidence is not financial truth. Proposal is not financial truth. Only accepted Operations create authoritative Effects. Accepted Operations and Effects are immutable. Corrections/Reversals are represented by new Operations and Effects. MVP operation types are Income, PersonalExpense, and OwnedAccountTransfer. MVP account classifications are Cash, Bank, and Wallet. Currency is explicit with a single-currency MVP.
+
 ## Accepted controlled sequence
-**DG-002 → DG-003 → DG-004 → DG-005 → thin vertical slice → architecture decisions only where the slice requires them → trustworthy core → validated capture → understanding → intelligence → action → expansion**
+**DG-003 → DG-004 → DG-005 → thin vertical slice → architecture decisions only where the slice requires them → trustworthy core → validated capture → understanding → intelligence → action → expansion**
 
 ## Important boundaries
 - No provider-specific financial domain models.
@@ -40,7 +45,7 @@ The accepted direction is Mizan as a globally applicable Personal Financial Oper
 - Pricing and packaging remain validation questions.
 
 ## Next action
-Proceed to **DG-002 Domain Model Decision Gate**. No production financial implementation should begin until the required M0 domain gates are accepted.
+Proceed to **DG-003 Financial Invariants Decision Gate**. No production financial implementation should begin until the required M0 domain gates are accepted.
 
 ## Verification rule
 A document is not treated as approved merely because it exists. Gate status and decision records must reflect explicit Product Owner acceptance.
