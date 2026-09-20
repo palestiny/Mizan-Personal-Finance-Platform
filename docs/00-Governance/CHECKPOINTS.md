@@ -131,12 +131,12 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Gate:** M1 Runtime & Technology Foundation
 - **Accepted:** ASP.NET Core/.NET; PostgreSQL; REST/HTTP JSON; API-first thin slice without production UI; xUnit + FluentAssertions + ASP.NET integration testing; explicit Domain/Application/Infrastructure/API boundaries; EF Core; versioned EF Core migrations.
 - **Issue:** #9 closed as completed.
-- **Next:** RED tests for the approved thin vertical slice.
+- **Next:** Continue with implementation and verification; the resulting GREEN state is recorded in CP-010/CP-011.
 
 
 ## CP-008 — M1 RED Test Foundation Established
 - **Date:** 2026-09-20
-- **State:** Completed
+- **State:** Completed — implementation and GREEN verification superseded the original RED-only checkpoint
 - **Phase:** M1 — Thin Vertical Slice Implementation
 - **Issue:** #10
 - **Objective:** Establish the executable test contract before implementing financial production behavior.
@@ -146,12 +146,12 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Next:** Minimum domain implementation → make RED tests GREEN → persistence transaction path → API path → rebuild/reconciliation verification.
 
 ## CP-009 — M1 PostgreSQL Persistence Boundary + API Path
-- **Status:** Completed implementation checkpoint
+- **Status:** Completed and runtime-verified
 - **Date:** 2026-09-20
 - **Scope:** EF Core/PostgreSQL persistence boundary, application finance service/repository, atomic Operation + Effects + idempotency transaction path, thin financial API, PostgreSQL CI service configuration.
-- **Verification status:** Implementation committed to GitHub; CI runtime result not yet verified because workflow execution has not yet been reported by the GitHub connector.
-- **Known follow-up:** Generate and commit the first versioned EF Core migration; then verify CI and harden idempotency conflict/concurrency behavior.
-- **Issue:** #11
+- **Verification status:** Production implementation is committed and the PostgreSQL-backed path is verified by successful GitHub CI runs.
+- **Completed follow-up:** First versioned EF Core migration committed; CI applies it successfully; idempotency conflict/concurrency behavior verified.
+- **Issue:** #11 — implementation/verification complete; issue can be closed.
 
 
 ## CP-010 — M1 Runtime Verification and Idempotency Hardening
