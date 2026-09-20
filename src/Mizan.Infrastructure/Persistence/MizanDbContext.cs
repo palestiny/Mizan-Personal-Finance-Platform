@@ -28,6 +28,8 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.Property(x => x.Type).IsRequired();
             e.Property(x => x.EffectiveAt).IsRequired();
             e.Property(x => x.RecordedAt).IsRequired();
+            e.Property(x => x.OriginalOperationId);
+            e.HasIndex(x => x.OriginalOperationId).IsUnique().HasFilter("\"original_operation_id\" IS NOT NULL");
         });
 
         modelBuilder.Entity<EffectRecord>(e =>
@@ -68,6 +70,7 @@ public sealed class OperationRecord
     public int Type { get; set; }
     public DateTimeOffset EffectiveAt { get; set; }
     public DateTimeOffset RecordedAt { get; set; }
+    public Guid? OriginalOperationId { get; set; }
 }
 
 public sealed class EffectRecord
