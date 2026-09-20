@@ -123,3 +123,12 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Gate:** M1 Thin Vertical Slice
 - **Accepted:** modular monolith; relational persistence abstraction; thin HTTP API; application command/query separation without full CQRS; atomic database transaction; domain + integration + API E2E tests; explicit idempotency key; effects-first balance implementation.
 - **Next:** RED tests for the approved slice.
+
+
+## CP-007 — M1 Runtime Technology Accepted
+- **Date:** 2026-09-20
+- **State:** Completed
+- **Gate:** M1 Runtime & Technology Foundation
+- **Accepted:** ASP.NET Core/.NET; PostgreSQL; REST/HTTP JSON; API-first thin slice without production UI; xUnit + FluentAssertions + ASP.NET integration testing; explicit Domain/Application/Infrastructure/API boundaries; EF Core; versioned EF Core migrations.
+- **Issue:** #9 closed as completed.
+- **Next:** RED tests for the approved thin vertical slice.
