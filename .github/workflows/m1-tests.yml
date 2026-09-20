@@ -1,0 +1,20 @@
+name: M1 Tests
+
+on:
+  push:
+    branches:
+      - foundation/m0-product-domain-foundation
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore Mizan.sln
+      - name: Test
+        run: dotnet test Mizan.sln --configuration Release --no-restore
