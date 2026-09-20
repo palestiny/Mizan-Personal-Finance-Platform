@@ -242,6 +242,33 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
+    public async Task Api_should_prevent_concurrent_over_settlement()
+    {
+        var account = await CreateAccountAsync("Recoverable Concurrent", 5000);
+        var created = await _client.PostAsJsonAsync("/api/operations/recoverable-expense", new
+        {
+            accountId = account.Id, amountMinorUnits = 1000, currency = "EGP",
+            counterpartyName = "Ahmed", effectiveAt = "2026-09-21T10:00:00+03:00", idempotencyKey = "recoverable-concurrent-expense"
+        });
+        var original = await created.Content.ReadFromJsonAsync<OperationResponse>();
+        var recoverableId = original!.RecoverableEffects[0].RecoverableId;
+
+        var requests = Enumerable.Range(1, 2).Select(i => _client.PostAsJsonAsync("/api/operations/recoverable-settlement", new
+        {
+            accountId = account.Id, recoverableId, amountMinorUnits = 600, currency = "EGP",
+            effectiveAt = $"2026-09-21T10:0{i}:00+03:00", idempotencyKey = $"recoverable-concurrent-settlement-{i}"
+        }));
+
+        var responses = await Task.WhenAll(requests);
+
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.OK);
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.BadRequest);
+
+        var recoverable = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
+        recoverable!.OutstandingMinorUnits.Should().Be(400);
+    }
+
+    [Fact]
     public async Task Api_should_reject_recoverable_over_settlement()
     {
         var account = await CreateAccountAsync("Recoverable Over", 5000);
