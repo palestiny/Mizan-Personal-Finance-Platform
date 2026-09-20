@@ -22,8 +22,8 @@ public sealed class HistoryAndExplanationTests
         var history = await service.GetHistoryAsync(account.Id);
         var explanation = await service.ExplainBalanceAsync(account.Id);
 
-        history.Should().BeInAscendingOrderBy(x => x.EffectiveAt);
+        history.Select(x => x.EffectiveAt).Should().BeInAscendingOrder();
         explanation.Effects.Should().HaveCount(2);
-        explanation.Balance.Should().Be(MoneyView.FromMinorUnits(75_00, "EGP"));
+        explanation.Balance.Should().Be(Money.FromMinorUnits(75_00, "EGP"));
     }
 }
