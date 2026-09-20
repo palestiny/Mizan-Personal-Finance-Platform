@@ -28,7 +28,7 @@ public sealed class EfFinanceRepository : IFinanceRepository
     public async Task<Account?> GetAccountAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var r = await _db.Accounts.AsNoTracking().SingleOrDefaultAsync(x => x.Id == accountId, cancellationToken);
-        return r is null ? null : Account.Create(r.Name, (AccountType)r.Type, r.Currency, Money.FromMinorUnits(r.OpeningBalanceMinorUnits, r.Currency));
+        return r is null ? null : Account.Rehydrate(r.Id, r.Name, (AccountType)r.Type, r.Currency, Money.FromMinorUnits(r.OpeningBalanceMinorUnits, r.Currency));
     }
 
     public async Task<FinancialOperation?> GetOperationByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken)
