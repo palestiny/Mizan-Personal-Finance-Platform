@@ -26,6 +26,9 @@ public sealed class FinancialOperation
     public IReadOnlyList<FinancialEffect> Effects { get; }
     public bool IsImmutable { get; }
 
+    public static FinancialOperation Rehydrate(Guid id, FinancialOperationType type, DateTimeOffset effectiveAt, DateTimeOffset recordedAt, IReadOnlyList<FinancialEffect> effects) =>
+        new(id, type, effectiveAt, recordedAt, effects);
+
     public static OperationBuilder Income(Guid accountId, Money amount, DateTimeOffset effectiveAt) =>
         new(FinancialOperationType.Income, effectiveAt, (id, recordedAt) =>
             new FinancialOperation(id, FinancialOperationType.Income, effectiveAt, recordedAt,
