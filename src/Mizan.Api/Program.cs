@@ -73,6 +73,13 @@ app.MapPost("/api/operations/transfer", async (TransferRequest request, FinanceS
     return Results.Ok(OperationResponse.From(op));
 });
 
+app.MapPost("/api/operations/reversal", async (ReverseOperationRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var op = await service.AcceptReversalAsync(
+        new ReverseOperationCommand(request.OriginalOperationId, request.EffectiveAt.ToString("O"), request.IdempotencyKey), ct);
+    return Results.Ok(OperationResponse.From(op));
+});
+
 app.MapGet("/api/accounts/{accountId:guid}/balance", async (Guid accountId, IFinanceRepository repository, CancellationToken ct) =>
 {
     var account = await repository.GetAccountAsync(accountId, ct);
@@ -116,11 +123,12 @@ public sealed record CreateAccountRequest(string Name, AccountType Type, string 
 public sealed record AcceptIncomeRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record AcceptExpenseRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record TransferRequest(Guid SourceAccountId, Guid DestinationAccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
+public sealed record ReverseOperationRequest(Guid OriginalOperationId, DateTimeOffset EffectiveAt, string IdempotencyKey);
 
-public sealed record OperationResponse(Guid Id, FinancialOperationType Type, DateTimeOffset EffectiveAt, DateTimeOffset RecordedAt, IReadOnlyList<EffectResponse> Effects)
+public sealed record OperationResponse(Guid Id, FinancialOperationType Type, DateTimeOffset EffectiveAt, DateTimeOffset RecordedAt, Guid? OriginalOperationId, IReadOnlyList<EffectResponse> Effects)
 {
     public static OperationResponse From(FinancialOperation operation) =>
-        new(operation.Id, operation.Type, operation.EffectiveAt, operation.RecordedAt,
+        new(operation.Id, operation.Type, operation.EffectiveAt, operation.RecordedAt, operation.OriginalOperationId,
             operation.Effects.Select(e => new EffectResponse(e.Id, e.AccountId, e.Amount.MinorUnits, e.Amount.Currency, e.Direction, e.Order)).ToArray());
 }
 
