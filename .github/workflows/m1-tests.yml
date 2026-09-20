@@ -46,5 +46,7 @@ jobs:
         run: dotnet test tests/Mizan.Domain.Tests/Mizan.Domain.Tests.csproj --configuration Release --no-restore --no-build
       - name: Test — Application
         run: dotnet test tests/Mizan.Application.Tests/Mizan.Application.Tests.csproj --configuration Release --no-restore --no-build
-      - name: Test — API
-        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build
+      - name: Test — API — Existing Flow
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_expose_one_complete_financial_flow"
+      - name: Test — API — Reversal
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_reverse_an_accepted_operation_without_mutating_the_original"
