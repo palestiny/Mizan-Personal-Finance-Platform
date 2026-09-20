@@ -107,43 +107,58 @@ public sealed class FinanceService
             return existing;
         }
 
-        var recoverableEffects = await _repository.GetRecoverableEffectsAsync(command.RecoverableId, cancellationToken);
-        if (recoverableEffects.Count == 0)
-            throw new DomainValidationException("Recoverable was not found.");
+        Exception? lastFailure = null;
 
-        var currency = recoverableEffects[0].Amount.Currency;
-        if (!string.Equals(currency, amount.Currency, StringComparison.OrdinalIgnoreCase))
-            throw new DomainValidationException("Settlement currency must match recoverable currency.");
-
-        var outstanding = checked(recoverableEffects.Sum(x => x.SignedMinorUnits));
-        if (amount.MinorUnits > outstanding)
-            throw new DomainValidationException("Settlement amount cannot exceed the outstanding recoverable amount.");
-
-        await ValidateActiveAccountsAsync(candidate, cancellationToken);
-
-        await _repository.BeginTransactionAsync(cancellationToken);
-        try
+        for (var attempt = 1; attempt <= 3; attempt++)
         {
-            await _repository.AddAcceptedOperationAsync(candidate, command.IdempotencyKey, cancellationToken);
-            await _repository.SaveChangesAsync(cancellationToken);
-            await _repository.CommitTransactionAsync(cancellationToken);
-            return candidate;
-        }
-        catch
-        {
-            await _repository.RollbackTransactionAsync(cancellationToken);
-
-            var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
-            if (concurrent is not null)
+            await _repository.BeginTransactionAsync(cancellationToken, System.Data.IsolationLevel.Serializable);
+            try
             {
-                if (!SemanticallyMatches(concurrent, candidate))
-                    throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+                var recoverableEffects = await _repository.GetRecoverableEffectsAsync(command.RecoverableId, cancellationToken);
+                if (recoverableEffects.Count == 0)
+                    throw new DomainValidationException("Recoverable was not found.");
 
-                return concurrent;
+                var currency = recoverableEffects[0].Amount.Currency;
+                if (!string.Equals(currency, amount.Currency, StringComparison.OrdinalIgnoreCase))
+                    throw new DomainValidationException("Settlement currency must match recoverable currency.");
+
+                var outstanding = checked(recoverableEffects.Sum(x => x.SignedMinorUnits));
+                if (amount.MinorUnits > outstanding)
+                    throw new DomainValidationException("Settlement amount cannot exceed the outstanding recoverable amount.");
+
+                await ValidateActiveAccountsAsync(candidate, cancellationToken);
+                await _repository.AddAcceptedOperationAsync(candidate, command.IdempotencyKey, cancellationToken);
+                await _repository.SaveChangesAsync(cancellationToken);
+                await _repository.CommitTransactionAsync(cancellationToken);
+                return candidate;
             }
+            catch (Exception ex)
+            {
+                lastFailure = ex;
+                await _repository.RollbackTransactionAsync(cancellationToken);
 
-            throw;
+                var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
+                if (concurrent is not null)
+                {
+                    if (!SemanticallyMatches(concurrent, candidate))
+                        throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
+                    return concurrent;
+                }
+
+                if (ex is DomainValidationException or IdempotencyConflictException)
+                    throw;
+
+                var latestEffects = await _repository.GetRecoverableEffectsAsync(command.RecoverableId, cancellationToken);
+                if (latestEffects.Count > 0 && amount.MinorUnits > latestEffects.Sum(x => x.SignedMinorUnits))
+                    throw new DomainValidationException("Settlement amount cannot exceed the outstanding recoverable amount.");
+
+                if (attempt < 3)
+                    continue;
+            }
         }
+
+        throw lastFailure ?? new InvalidOperationException("Recoverable settlement failed.");
     }
 
     public async Task<FinancialOperation> AcceptReversalAsync(ReverseOperationCommand command, CancellationToken cancellationToken)
