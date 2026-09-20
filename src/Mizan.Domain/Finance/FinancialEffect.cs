@@ -30,4 +30,7 @@ public sealed class FinancialEffect
     public long Order { get; }
 
     public long SignedMinorUnits => Direction == EffectDirection.Increase ? Amount.MinorUnits : -Amount.MinorUnits;
+
+    public static FinancialEffect Rehydrate(Guid id, Guid operationId, Guid accountId, Money amount, EffectDirection direction, DateTimeOffset effectiveAt, DateTimeOffset recordedAt, long order) =>
+        new(id, operationId, accountId, amount, direction, effectiveAt, recordedAt, order);
 }
