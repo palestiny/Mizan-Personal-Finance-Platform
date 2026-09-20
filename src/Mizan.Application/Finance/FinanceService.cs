@@ -31,6 +31,7 @@ public sealed class FinanceService
 
             return existing;
         }
+
         await _repository.BeginTransactionAsync(cancellationToken);
         try
         {
@@ -58,7 +59,6 @@ public sealed class FinanceService
 
     public async Task<IReadOnlyList<FinancialEffect>> GetEffectsAsync(Guid accountId, CancellationToken cancellationToken) =>
         await _repository.GetEffectsAsync(accountId, cancellationToken);
-}
 
     private static bool SemanticallyMatches(FinancialOperation existing, FinancialOperation candidate)
     {
