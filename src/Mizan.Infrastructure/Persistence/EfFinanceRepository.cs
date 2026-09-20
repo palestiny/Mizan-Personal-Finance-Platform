@@ -1,3 +1,4 @@
+using System.Data;
 using Microsoft.EntityFrameworkCore;
 using Mizan.Application.Finance;
 using Mizan.Domain.Finance;
@@ -103,7 +104,7 @@ public sealed class EfFinanceRepository : IFinanceRepository
 
     public Task SaveChangesAsync(CancellationToken cancellationToken) => _db.SaveChangesAsync(cancellationToken);
 
-    public async Task BeginTransactionAsync(CancellationToken cancellationToken) => _transaction = await _db.Database.BeginTransactionAsync(cancellationToken);
+    public async Task BeginTransactionAsync(CancellationToken cancellationToken, IsolationLevel isolationLevel = IsolationLevel.ReadCommitted) => _transaction = await _db.Database.BeginTransactionAsync(isolationLevel, cancellationToken);
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken)
     {
