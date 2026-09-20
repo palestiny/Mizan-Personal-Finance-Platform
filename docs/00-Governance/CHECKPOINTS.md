@@ -132,3 +132,15 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Accepted:** ASP.NET Core/.NET; PostgreSQL; REST/HTTP JSON; API-first thin slice without production UI; xUnit + FluentAssertions + ASP.NET integration testing; explicit Domain/Application/Infrastructure/API boundaries; EF Core; versioned EF Core migrations.
 - **Issue:** #9 closed as completed.
 - **Next:** RED tests for the approved thin vertical slice.
+
+
+## CP-008 — M1 RED Test Foundation Established
+- **Date:** 2026-09-20
+- **State:** Completed
+- **Phase:** M1 — Thin Vertical Slice Implementation
+- **Issue:** #10
+- **Objective:** Establish the executable test contract before implementing financial production behavior.
+- **Established:** solution/project boundaries, Domain/Application/Infrastructure/API projects, domain/application/API test projects, core RED specifications, and CI workflow.
+- **Coverage:** Money precision, operation/effect semantics, transfer conservation, immutability, derived/rebuildable balance, idempotency, atomicity, deterministic history/explanation, and one API financial path.
+- **Important verification note:** The tests are intentionally ahead of the implementation. No GREEN result is claimed. The GitHub connector did not expose a workflow run for the latest workflow commit yet.
+- **Next:** Minimum domain implementation → make RED tests GREEN → persistence transaction path → API path → rebuild/reconciliation verification.
