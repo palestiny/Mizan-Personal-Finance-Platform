@@ -66,11 +66,15 @@ Major decisions require an explicit design gate. Strategic hypotheses are docume
 
 ## M0 design gates
 
+Product/domain foundation:
 - DG-001 — Product Scope
+- DG-013 — Product Strategy
 - DG-002 — Financial Domain Model
 - DG-003 — Financial Invariants
 - DG-004 — Transaction Model
 - DG-005 — Balance Model
+
+Architecture gates are opened just in time when a concrete requirement makes them necessary:
 - DG-006 — Offline-First Strategy
 - DG-007 — Persistence Architecture
 - DG-008 — Synchronization
@@ -78,8 +82,6 @@ Major decisions require an explicit design gate. Strategic hypotheses are docume
 - DG-010 — Security & Privacy
 - DG-011 — Backend Architecture
 - DG-012 — Production & Observability
-
-The order may change if evidence shows a dependency requires it.
 
 ## Repository rule
 
