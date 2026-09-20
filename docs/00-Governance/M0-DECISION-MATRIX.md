@@ -2,40 +2,35 @@
 
 ## Purpose
 
-This matrix is the control surface for the M0 decision gates. It makes the dependency order explicit without silently converting proposals into approved decisions.
+This matrix is the control surface for M0. It distinguishes direction, proposals, and approved decisions and prevents preparatory design work from being mistaken for approval.
 
-**Rule:** An item is not approved because a proposal or document exists. It becomes approved only after the Product Owner/Decision Owner explicitly accepts the decision and the corresponding gate/checkpoint is updated.
+## Gate map
 
-## Decision status
-
-| Gate | Decision | Current state | Depends on | Blocks |
-|---|---|---|---|---|
-| DG-001 | Product Scope | **Open — Product Owner decision required** | Product direction | DG-002, DG-003, DG-004, DG-005 |
-| DG-002 | Financial Domain Model | Not started | DG-001 | DG-003, DG-004, DG-005 |
-| DG-003 | Financial Invariants | Not started | DG-002 | DG-004, DG-005 |
-| DG-004 | Transaction Model | Not started | DG-003 | DG-005 and implementation |
-| DG-005 | Balance Model | Not started | DG-004 | Persistence/offline implementation decisions |
-| DG-006 | Offline-First Strategy | Not started | DG-005 + release requirement | DG-007, DG-008 |
-| DG-007 | Persistence Architecture | Not started | Domain + balance + offline decisions | Implementation foundation |
-| DG-008 | Synchronization | Not started | Persistence + offline strategy | Multi-device/server implementation |
-| DG-009 | Mobile Technology | Not started | Product constraints + architecture constraints | Mobile implementation |
-| DG-010 | Security & Privacy | Not started | Product/data boundaries | Production implementation |
-| DG-011 | Backend Architecture | Not started | Domain + persistence + sync requirements | Backend implementation |
-| DG-012 | Production & Observability | Not started | Architecture + operational requirements | Production readiness |
-
-## DG-001 pending decisions
-
-These are the decisions currently exposed by the Product Scope gate:
-
-| ID | Decision | Current proposal | Status |
+| Gate | Current state | Depends on | Blocks |
 |---|---|---|---|
-| D1 | Initial user boundary | Individual personal finance | Open |
-| D2 | MVP financial scope | Complete personal-finance core | Open |
-| D3 | Account scope | Accounts required for the core financial loop; exact domain representation deferred to DG-002 | Open |
-| D4 | Currency scope | Not selected | Open |
-| D5 | Offline requirement | Candidate capability; release requirement not yet selected | Open |
-| D6 | History correction policy | Not selected | Open |
-| D7 | Data portability | Not selected | Open |
+| DG-001 | **Open — Product Owner decision required** | Product direction | DG-002, DG-003, DG-004, DG-005 |
+| DG-013 | **Open — Strategy validation/decision required** | Product direction + discovery evidence | Release strategy, AI sequencing, commercial validation |
+| DG-002 | **Draft — candidate prepared** | DG-001 | DG-003, DG-004 |
+| DG-003 | **Draft — candidate prepared** | DG-002 | DG-004, DG-005 |
+| DG-004 | **Draft — candidate prepared** | DG-003 | DG-005 |
+| DG-005 | **Not started** | DG-004 | Balance implementation |
+| DG-006 | **Not started** | Approved product requirement + DG-005 | Offline architecture if required |
+| DG-007 | **Not started** | Domain/balance requirements + concrete runtime constraints | Persistence implementation |
+| DG-008 | **Not started** | Persistence + offline requirement | Multi-device synchronization |
+| DG-009 | **Not started** | Product constraints + architecture constraints | Mobile implementation decisions |
+| DG-010 | **Not started** | Data boundaries + concrete runtime needs | Production security controls |
+| DG-011 | **Not started** | Approved domain + persistence/runtime needs | Backend implementation |
+| DG-012 | **Not started** | Runtime architecture + release needs | Production readiness |
+
+## M0 completion rule
+
+M0 is complete when the minimum product/domain foundation is approved and verified, not when every future architecture question has been decided.
+
+The intended M0 closure path is:
+
+DG-001 + DG-013 → DG-002 → DG-003 → DG-004 → DG-005
+
+DG-006 through DG-012 are architecture gates, not prerequisites for proving the core domain.
 
 ## Decision discipline
 
@@ -43,25 +38,34 @@ For every significant decision:
 
 1. State the problem and constraints.
 2. Identify realistic alternatives.
-3. Record relevant trade-offs and consequences.
+3. Record trade-offs and consequences.
 4. Make the decision explicitly.
 5. Record rejected alternatives when useful.
-6. Define revisit conditions when the decision may legitimately change.
+6. Define revisit conditions when legitimate.
 7. Update the relevant gate and checkpoint.
 8. Only then treat downstream work as unblocked.
 
-## Current execution rule
+## Architecture gating rule
 
-Until DG-001 is explicitly closed:
+Do not force all of DG-006–DG-012 through M0 upfront.
 
-- Do not implement production financial domain code.
-- Do not finalize the financial data model.
-- Do not finalize transaction or balance semantics.
-- Do not select a persistence/mobile/backend stack as an approved architecture.
-- Preparatory analysis may continue only when it does not silently decide a blocked product/domain decision.
+Open a gate when:
+- the product requirement is concrete;
+- the decision materially constrains implementation;
+- relevant alternatives can be evaluated with evidence.
 
-## Next controlled step
+This keeps the project small while preserving engineering quality.
 
-**Close DG-001.**
+## Current working proposals
 
-Once DG-001 is accepted, proceed to **DG-002 — Financial Domain Model**, using the accepted product boundary as an input rather than re-deciding it implicitly.
+| Area | Working proposal | Status |
+|---|---|---|
+| Initial user | Individual | Open |
+| MVP financial core | Accounts + income + expense + transfer + balance + history | Open |
+| Domain shape | Operation + Effect, with Evidence/Proposal around it | Open |
+| Currency | Single-currency MVP candidate | Open |
+| Offline | Architecture-ready; full offline behavior only if justified by release requirement | Open |
+| Correction | Mixed/explicit correction history candidate | Open |
+| Portability | Export in MVP candidate | Open |
+
+None of these are approved until the relevant decision gate is closed.
