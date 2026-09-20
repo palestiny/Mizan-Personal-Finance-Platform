@@ -191,11 +191,12 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 
 
 ## CP-013 — M2 Account Lifecycle
-- **Status:** Implementation complete; runtime verification pending CI
+- **Status:** Completed and runtime-verified
 - **Date:** 2026-09-21
 - **Phase:** M2 — Trustworthy Financial Core
 - **Gate:** DG-014 Account Lifecycle
 - **Product Owner decision:** Active / Closed lifecycle with reopening; normal new balance-changing operations blocked on Closed accounts; historical Reversal remains allowed after closure.
 - **Implemented:** domain lifecycle state and transitions, application close/reopen commands, normal-operation account-state validation, persistence status, EF migration/designer/snapshot, API endpoints, and verification tests.
-- **Verification contract:** new accounts Active; close/reopen and invalid transitions; Closed-account operation rejection; readable balance; reversal after closure; PostgreSQL persistence.
-- **Next:** GitHub CI verification and root-cause correction of any failing behavior before marking this checkpoint GREEN.
+- **Verification:** GitHub Actions run #130 completed successfully on the corrected implementation. Build, EF migration application against PostgreSQL, Domain tests, Application tests, existing API financial/idempotency/reversal coverage, and all three Account Lifecycle API scenarios are GREEN.
+- **Root-cause fix before GREEN:** corrected the malformed PostgreSQL reversal-index filter string that caused CI run #129 to fail at compile time. The corrected commit was then verified by run #130.
+- **Merge:** PR #14 was squash-merged into `main` at commit `58405ea502a8ebd30b91481700c7957c14c105c9`.
