@@ -20,7 +20,17 @@ public sealed class TestFinanceApplication
     public Task<FinancialOperation> AcceptIncomeAsync(AcceptIncomeCommand command)
     {
         if (_idempotency.TryGetValue(command.IdempotencyKey, out var existing))
+        {
+            var requested = FinancialOperation.Income(
+                command.AccountId,
+                Money.FromMinorUnits(command.Amount.MinorUnits, command.Amount.Currency),
+                Parse(command.EffectiveAt)).Accept();
+
+            if (!SemanticallyMatches(existing, requested))
+                throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
             return Task.FromResult(existing);
+        }
 
         var account = GetAccount(command.AccountId);
         ValidateCurrency(account, command.Amount.Currency);
@@ -84,6 +94,24 @@ public sealed class TestFinanceApplication
     {
         _idempotency.Add(key, operation);
         _effects.AddRange(operation.Effects);
+    }
+
+    private static bool SemanticallyMatches(FinancialOperation existing, FinancialOperation candidate)
+    {
+        if (existing.Type != candidate.Type ||
+            existing.EffectiveAt != candidate.EffectiveAt ||
+            existing.Effects.Count != candidate.Effects.Count)
+            return false;
+
+        return existing.Effects
+            .OrderBy(x => x.Order)
+            .Zip(candidate.Effects.OrderBy(x => x.Order))
+            .All(pair =>
+                pair.First.AccountId == pair.Second.AccountId &&
+                pair.First.Amount == pair.Second.Amount &&
+                pair.First.Direction == pair.Second.Direction &&
+                pair.First.Order == pair.Second.Order &&
+                pair.First.EffectiveAt == pair.Second.EffectiveAt);
     }
 
     private Account GetAccount(Guid id) =>
