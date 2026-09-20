@@ -197,6 +197,14 @@ public sealed class FinanceService
 
         var operation = FinancialOperation.Reversal(original, Parse(command.EffectiveAt)).Accept();
 
+        foreach (var recoverableEffect in original.RecoverableEffects.Where(x => x.Direction == RecoverableEffectDirection.Increase))
+        {
+            var currentEffects = await _repository.GetRecoverableEffectsAsync(recoverableEffect.RecoverableId, cancellationToken);
+            var outstanding = checked(currentEffects.Sum(x => x.SignedMinorUnits));
+            if (outstanding < recoverableEffect.Amount.MinorUnits)
+                throw new DomainValidationException("The recoverable operation cannot be reversed while its recoverable claim has been partially settled. Reverse the settlements first.");
+        }
+
         await _repository.BeginTransactionAsync(cancellationToken);
         try
         {
@@ -274,7 +282,8 @@ public sealed class FinanceService
             .Zip(candidate.RecoverableEffects.OrderBy(x => x.Order))
             .All(pair =>
                 pair.First.RecoverableId == pair.Second.RecoverableId ||
-                (existing.Type == FinancialOperationType.RecoverableExpense && candidate.Type == FinancialOperationType.RecoverableExpense &&
+                ((existing.Type == FinancialOperationType.RecoverableExpense && candidate.Type == FinancialOperationType.RecoverableExpense) ||
+                 (existing.Type == FinancialOperationType.SharedExpense && candidate.Type == FinancialOperationType.SharedExpense)) &&
                  pair.First.Direction == pair.Second.Direction &&
                  pair.First.Amount == pair.Second.Amount &&
                  string.Equals(pair.First.CounterpartyName, pair.Second.CounterpartyName, StringComparison.Ordinal)));
