@@ -13,21 +13,50 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     public FinancialFlowApiTests(WebApplicationFactory<Program> factory) => _client = factory.CreateClient();
 
     [Fact]
-    public async Task Api_should_accept_income_and_enforce_idempotency_conflict()
+    public async Task Api_should_accept_income()
     {
-        var account = await CreateAccountAsync("Cash Basic");
-        var request = new { accountId = account.Id, amountMinorUnits = 10000, currency = "EGP", effectiveAt = "2026-09-20T10:00:00+03:00", idempotencyKey = "api-basic-1" };
+        var account = await CreateAccountAsync("Cash Income");
+        var response = await _client.PostAsJsonAsync("/api/operations/income", new
+        {
+            accountId = account.Id, amountMinorUnits = 10000, currency = "EGP",
+            effectiveAt = "2026-09-20T10:00:00+03:00", idempotencyKey = "api-income-1"
+        });
+        response.StatusCode.Should().Be(HttpStatusCode.OK);
+    }
 
-        var income = await _client.PostAsJsonAsync("/api/operations/income", request);
-        income.StatusCode.Should().Be(HttpStatusCode.OK);
-        var duplicate = await _client.PostAsJsonAsync("/api/operations/income", request);
-        duplicate.StatusCode.Should().Be(HttpStatusCode.OK);
+    [Fact]
+    public async Task Api_should_return_same_operation_for_idempotent_retry()
+    {
+        var account = await CreateAccountAsync("Cash Retry");
+        var request = new
+        {
+            accountId = account.Id, amountMinorUnits = 10000, currency = "EGP",
+            effectiveAt = "2026-09-20T10:00:00+03:00", idempotencyKey = "api-retry-1"
+        };
+        var first = await _client.PostAsJsonAsync("/api/operations/income", request);
+        var second = await _client.PostAsJsonAsync("/api/operations/income", request);
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await second.Content.ReadFromJsonAsync<OperationResponse>())!.Id
+            .Should().Be((await first.Content.ReadFromJsonAsync<OperationResponse>())!.Id);
+    }
 
-        var firstOperation = await income.Content.ReadFromJsonAsync<OperationResponse>();
-        var duplicateOperation = await duplicate.Content.ReadFromJsonAsync<OperationResponse>();
-        duplicateOperation!.Id.Should().Be(firstOperation!.Id);
+    [Fact]
+    public async Task Api_should_reject_different_command_under_same_idempotency_key()
+    {
+        var account = await CreateAccountAsync("Cash Conflict");
+        var first = await _client.PostAsJsonAsync("/api/operations/income", new
+        {
+            accountId = account.Id, amountMinorUnits = 10000, currency = "EGP",
+            effectiveAt = "2026-09-20T10:00:00+03:00", idempotencyKey = "api-conflict-1"
+        });
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
 
-        var conflict = await _client.PostAsJsonAsync("/api/operations/income", new { accountId = account.Id, amountMinorUnits = 11000, currency = "EGP", effectiveAt = "2026-09-20T10:00:00+03:00", idempotencyKey = "api-basic-1" });
+        var conflict = await _client.PostAsJsonAsync("/api/operations/income", new
+        {
+            accountId = account.Id, amountMinorUnits = 11000, currency = "EGP",
+            effectiveAt = "2026-09-20T10:00:00+03:00", idempotencyKey = "api-conflict-1"
+        });
         conflict.StatusCode.Should().Be(HttpStatusCode.Conflict);
     }
 
