@@ -1,7 +1,7 @@
 # DG-005 — Balance Model Decision Gate
 
 ## Status
-**State:** Draft — decision-ready candidate
+**State:** Accepted — Product Owner approved 2026-09-20
 **Phase:** M0 — Product & Domain Foundation
 **Decision owner:** Khaled
 
@@ -113,16 +113,17 @@ Because MVP is single-currency, aggregation across accounts is permitted within 
 | Ordering | ties produce deterministic results |
 | Global total | equals sum of authoritative account balances |
 
-## 14. Open decisions for Product Owner
+## 14. Accepted decisions
 
-1. Source of truth: A/B/C
-2. Effect sign representation: explicit direction + absolute amount vs signed amount
-3. Opening balance: immutable initial state vs opening operation
-4. Point-in-time semantics: `effective_at` only vs `effective_at` + explicit sequence
-5. Materialized balance: allowed optimization vs required read model
-6. Negative balance: allowed by default vs account-policy restricted
-7. Global balance: derived view only vs persisted aggregate
-8. Balance explanation: core domain result vs application/read-model concern
+1. **Source of truth:** Authoritative Effects; balance is derived.
+2. **Effect representation:** `Money` is an absolute amount; Effect carries explicit direction/type.
+3. **Opening balance:** explicit immutable initial state after acceptance; correction uses a new operation/effects.
+4. **Point-in-time semantics:** balance is evaluated using `effective_at`.
+5. **Ordering:** deterministic persisted effect/order identity resolves equal `effective_at` values; `recorded_at` remains audit/context.
+6. **Materialized balance:** allowed only as a derived optimization/read model; it is never financial truth.
+7. **Negative balance:** allowed by default at the generic Account level; account-specific policy may restrict it later.
+8. **Global balance:** derived view only; it is not an independent source of truth.
+9. **Balance explanation:** explanation is a derived/application/read-model concern backed by authoritative Effects and opening state.
 
 ## 15. Gate dependencies
 
@@ -131,5 +132,7 @@ DG-005 is the final M0 domain gate before the thin vertical slice.
 
 ## 16. Decision record
 
-**Decision:** Open
-**Approval:** Not granted.
+**Decision:** Accepted
+**Decision owner:** Khaled
+**Approval date:** 2026-09-20
+**Approval:** All eight Balance Model recommendations were accepted. The balance remains derived from authoritative financial state, and all materialized/read-model representations remain non-authoritative.
