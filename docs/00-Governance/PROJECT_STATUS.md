@@ -4,8 +4,8 @@
 **M1 — Thin Vertical Slice Implementation**
 
 ## Current state
-**Status:** In progress  
-**Production implementation:** domain foundation + EF Core/PostgreSQL persistence boundary + thin API path implemented; real CI verification and first versioned EF migration remain.
+**Status:** M1 implementation verified; closure checkpoint pending Product Owner acceptance.  
+**Production implementation:** domain foundation + EF Core/PostgreSQL persistence boundary + thin API path implemented; committed EF migration and real CI verification are complete.
 
 ## Accepted product and strategy gates
 - **DG-001 Product Scope:** Accepted
@@ -95,7 +95,7 @@ The production path now contains:
 A temporary EnsureCreated path is restricted to the Testing environment. It is not the production migration strategy. The first committed versioned EF Core migration is now present and CI applies it successfully against PostgreSQL.
 
 ## Next action
-Close the M1 verification/documentation checkpoint, then evaluate the remaining M1 Definition-of-Done gap: explicit rebuild/reconciliation verification from authoritative Effects. Do not add architecture that the accepted slice does not require.
+Complete the M1 closure checkpoint. The required rebuildability behavior is already covered by the domain verification suite; no additional architecture is required. After closure, open the next roadmap design gate only when the next capability materially requires a decision.
 
 
 ## Verification rule
