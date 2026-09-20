@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Mizan.Application.Finance;
+using Mizan.Domain.Finance;
 
 namespace Mizan.Application.Tests;
 
@@ -20,7 +21,7 @@ public sealed class IdempotencyTests
         var first = await service.AcceptIncomeAsync(command);
         var retry = await service.AcceptIncomeAsync(command);
 
-        retry.OperationId.Should().Be(first.OperationId);
+        retry.Id.Should().Be(first.Id);
         (await service.CountEffectsAsync(account.Id)).Should().Be(1);
     }
 }
