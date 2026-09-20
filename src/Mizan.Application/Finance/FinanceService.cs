@@ -42,6 +42,16 @@ public sealed class FinanceService
         catch
         {
             await _repository.RollbackTransactionAsync(cancellationToken);
+
+            var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
+            if (concurrent is not null)
+            {
+                if (!SemanticallyMatches(concurrent, operation))
+                    throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
+                return concurrent;
+            }
+
             throw;
         }
     }
