@@ -19,6 +19,6 @@ public sealed class MoneyTests
     {
         var money = Money.FromMinorUnits(999, "EGP");
 
-        money.MinorUnits.Should().BeOfType<long>();
+        money.MinorUnits.Should().Be(999L);
     }
 }
