@@ -1,0 +1,26 @@
+using FluentAssertions;
+using Mizan.Application.Finance;
+
+namespace Mizan.Application.Tests;
+
+public sealed class IdempotencyTests
+{
+    [Fact]
+    public async Task Repeating_the_same_command_should_not_duplicate_financial_effects()
+    {
+        var service = TestFinanceApplication.CreateInMemory();
+        var account = await service.CreateAccountAsync("Cash", AccountType.Cash, "EGP");
+
+        var command = new AcceptIncomeCommand(
+            account.Id,
+            MoneyInput.FromMinorUnits(100_00, "EGP"),
+            "2026-09-20T10:00:00+03:00",
+            "idem-001");
+
+        var first = await service.AcceptIncomeAsync(command);
+        var retry = await service.AcceptIncomeAsync(command);
+
+        retry.OperationId.Should().Be(first.OperationId);
+        (await service.CountEffectsAsync(account.Id)).Should().Be(1);
+    }
+}
