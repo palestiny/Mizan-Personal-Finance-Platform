@@ -71,7 +71,7 @@ The GitHub Actions workflow `.github/workflows/m1-tests.yml` executes restore, b
 - Concurrent duplicate protection
 - Latest documented verification: GitHub Actions run #128
 
-## Verified M2 account lifecycle capability
+## Implemented M2 account lifecycle capability
 - Account lifecycle uses Active / Closed states.
 - New accounts are Active.
 - Close and Reopen are explicit application commands.
