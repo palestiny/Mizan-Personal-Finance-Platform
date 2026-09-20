@@ -89,6 +89,17 @@ public sealed class FinanceService
             command.IdempotencyKey,
             cancellationToken);
 
+    public async Task<FinancialOperation> AcceptSharedExpenseAsync(AcceptSharedExpenseCommand command, CancellationToken cancellationToken) =>
+        await AcceptAsync(
+            FinancialOperation.SharedExpense(
+                command.AccountId,
+                Money.FromMinorUnits(command.TotalAmount.MinorUnits, command.TotalAmount.Currency),
+                Money.FromMinorUnits(command.RecoverableAmount.MinorUnits, command.RecoverableAmount.Currency),
+                command.CounterpartyName,
+                Parse(command.EffectiveAt)),
+            command.IdempotencyKey,
+            cancellationToken);
+
     public async Task<FinancialOperation> AcceptRecoverableSettlementAsync(SettleRecoverableCommand command, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
