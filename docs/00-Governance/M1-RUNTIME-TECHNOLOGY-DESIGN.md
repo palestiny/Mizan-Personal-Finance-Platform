@@ -1,7 +1,7 @@
 # M1 — Runtime & Technology Foundation Decision Gate
 
 ## Status
-**State:** Draft — decision-ready candidate
+**State:** Accepted
 **Phase:** M1 — Thin Technical Foundation
 **Decision owner:** Khaled
 
@@ -134,5 +134,5 @@ Not appropriate for production financial persistence.
 - Decision recorded and downstream RED tests use the selected stack.
 
 ## Decision record
-**Decision:** Open  
-**Approval:** Not granted.
+**Decision:** Accepted  
+**Approval:** Khaled — 2026-09-20
