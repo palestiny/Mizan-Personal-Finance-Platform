@@ -1,7 +1,7 @@
 # M1 — Thin Vertical Slice Design Gate
 
 ## Status
-**State:** Draft — decision-ready candidate
+**State:** Accepted — Product Owner approved 2026-09-20
 **Phase:** M1 — Thin Technical Foundation
 **Decision owner:** Khaled
 
@@ -103,5 +103,23 @@ RED tests → minimal domain types → accepted Operation/effect behavior → pe
 - Tests demonstrate deterministic ordering and correction-ready history boundaries.
 - No architecture introduced without a demonstrated slice requirement.
 
-## Product Owner decisions required
-D1 through D8 above. Recommendations are not approvals.
+## Accepted decisions
+
+1. **D1 Application shape:** Modular monolith with explicit Domain / Application / Infrastructure / API boundaries.
+2. **D2 Persistence:** Relational database behind a persistence abstraction.
+3. **D3 API boundary:** Thin HTTP API exposing commands and read models.
+4. **D4 Read/write separation:** Separate command/application services from query/read models at the application boundary; no full CQRS infrastructure.
+5. **D5 Transaction boundary:** One database transaction around accepted Operation + complete Effect set + required derived updates.
+6. **D6 Test strategy:** Domain invariant tests + application integration tests + one API end-to-end path.
+7. **D7 Identity/idempotency:** Stable client-provided idempotency key at the command boundary, persisted with the accepted operation.
+8. **D8 Balance implementation:** Compute from authoritative Effects first; introduce materialized derived balance only after measured need.
+
+## Decision record
+
+**Decision:** Accepted
+**Decision owner:** Khaled
+**Approval date:** 2026-09-20
+**Approval:** Product Owner approved all eight recommended M1 thin-slice architecture decisions.
+
+## Next implementation sequence
+RED tests → minimal domain types → accepted Operation/effect behavior → persistence atomic commit → balance/history queries → idempotency → API path → rebuild/reconciliation tests → refactor.
