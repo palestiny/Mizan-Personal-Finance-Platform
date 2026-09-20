@@ -3,7 +3,8 @@ using Mizan.Application.Finance;
 using Mizan.Domain.Finance;
 using Mizan.Infrastructure.Persistence;
 
-var builder = WebApplication.CreateBuilder(args);\nbuilder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
+var builder = WebApplication.CreateBuilder(args);
+builder.Services.ConfigureHttpJsonOptions(options => options.SerializerOptions.Converters.Add(new System.Text.Json.Serialization.JsonStringEnumConverter()));
 
 builder.Services.AddDbContext<MizanDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Mizan") ?? "Host=localhost;Database=mizan;Username=postgres;Password=postgres"));
