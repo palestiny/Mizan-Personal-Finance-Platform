@@ -15,6 +15,7 @@ public sealed class ImmutabilityTests
             DateTimeOffset.UtcNow).Accept();
 
         operation.IsImmutable.Should().BeTrue();
-        operation.Effects.Should().NotBeAssignableTo<IList<FinancialEffect>>();
+        var effects = operation.Effects.Should().BeAssignableTo<IList<FinancialEffect>>().Subject;
+        effects.IsReadOnly.Should().BeTrue();
     }
 }
