@@ -90,6 +90,20 @@ app.MapPost("/api/operations/recoverable-expense", async (RecoverableExpenseRequ
     return Results.Ok(OperationResponse.From(op));
 });
 
+app.MapPost("/api/operations/shared-expense", async (SharedExpenseRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var op = await service.AcceptSharedExpenseAsync(
+        new AcceptSharedExpenseCommand(
+            request.AccountId,
+            new MoneyInput(request.TotalAmountMinorUnits, request.Currency),
+            new MoneyInput(request.RecoverableAmountMinorUnits, request.Currency),
+            request.CounterpartyName,
+            request.EffectiveAt.ToString("O"),
+            request.IdempotencyKey),
+        ct);
+    return Results.Ok(OperationResponse.From(op));
+});
+
 app.MapPost("/api/operations/recoverable-settlement", async (RecoverableSettlementRequest request, FinanceService service, CancellationToken ct) =>
 {
     var op = await service.AcceptRecoverableSettlementAsync(
@@ -179,6 +193,7 @@ public sealed record CreateAccountRequest(string Name, AccountType Type, string 
 public sealed record AcceptIncomeRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record AcceptExpenseRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record RecoverableExpenseRequest(Guid AccountId, long AmountMinorUnits, string Currency, string CounterpartyName, DateTimeOffset EffectiveAt, string IdempotencyKey);
+public sealed record SharedExpenseRequest(Guid AccountId, long TotalAmountMinorUnits, long RecoverableAmountMinorUnits, string Currency, string CounterpartyName, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record RecoverableSettlementRequest(Guid AccountId, Guid RecoverableId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record TransferRequest(Guid SourceAccountId, Guid DestinationAccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
 public sealed record ReverseOperationRequest(Guid OriginalOperationId, DateTimeOffset EffectiveAt, string IdempotencyKey);
