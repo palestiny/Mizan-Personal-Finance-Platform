@@ -1,5 +1,6 @@
 using FluentAssertions;
 using Mizan.Application.Finance;
+using Mizan.Domain.Finance;
 
 namespace Mizan.Application.Tests;
 
