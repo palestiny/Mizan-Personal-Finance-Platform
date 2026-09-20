@@ -31,7 +31,7 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.Property(x => x.RecordedAt).IsRequired();
             e.Property(x => x.OriginalOperationId);
             e.HasOne<OperationRecord>().WithMany().HasForeignKey(x => x.OriginalOperationId).OnDelete(DeleteBehavior.Restrict);
-            e.HasIndex(x => x.OriginalOperationId).IsUnique().HasFilter(""original_operation_id" IS NOT NULL");
+            e.HasIndex(x => x.OriginalOperationId).IsUnique().HasFilter("\"OriginalOperationId\" IS NOT NULL");
         });
 
         modelBuilder.Entity<EffectRecord>(e =>
