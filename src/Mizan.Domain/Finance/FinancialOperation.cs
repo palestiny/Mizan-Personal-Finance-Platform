@@ -6,7 +6,8 @@ public enum FinancialOperationType
 {
     Income,
     PersonalExpense,
-    OwnedAccountTransfer
+    OwnedAccountTransfer,
+    Reversal
 }
 
 public sealed class FinancialOperation
