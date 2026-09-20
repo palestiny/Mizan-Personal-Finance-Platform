@@ -31,6 +31,11 @@ namespace Mizan.Infrastructure.Migrations
                 b.ToTable("accounts", (string)null);
             });
 
+            modelBuilder.Entity("Mizan.Infrastructure.Persistence.OperationRecord", b =>
+            {
+                b.HasOne("Mizan.Infrastructure.Persistence.OperationRecord", null).WithMany().HasForeignKey("OriginalOperationId").OnDelete(DeleteBehavior.Restrict);
+            });
+
             modelBuilder.Entity("Mizan.Infrastructure.Persistence.EffectRecord", b =>
             {
                 b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
@@ -61,9 +66,11 @@ namespace Mizan.Infrastructure.Migrations
             {
                 b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
                 b.Property<DateTimeOffset>("EffectiveAt").HasColumnType("timestamp with time zone");
+                b.Property<Guid?>("OriginalOperationId").HasColumnType("uuid");
                 b.Property<DateTimeOffset>("RecordedAt").HasColumnType("timestamp with time zone");
                 b.Property<int>("Type").HasColumnType("integer");
                 b.HasKey("Id");
+                b.HasIndex("OriginalOperationId").IsUnique().HasFilter("\"original_operation_id\" IS NOT NULL");
                 b.ToTable("financial_operations", (string)null);
             });
 
