@@ -115,3 +115,11 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Gate:** DG-005 Balance Model
 - **Accepted:** authoritative Effects are the source of truth; balance is derived; explicit Effect direction with absolute Money; immutable opening state; deterministic point-in-time ordering; materialized balance is derived only; negative balances allowed by default at Account level; global balance is derived; explanation is backed by authoritative state.
 - **Next:** Thin vertical slice / implementation design gates as required.
+
+
+## CP-006 — M1 Thin Vertical Slice Architecture Accepted
+- **Date:** 2026-09-20
+- **State:** Completed
+- **Gate:** M1 Thin Vertical Slice
+- **Accepted:** modular monolith; relational persistence abstraction; thin HTTP API; application command/query separation without full CQRS; atomic database transaction; domain + integration + API E2E tests; explicit idempotency key; effects-first balance implementation.
+- **Next:** RED tests for the approved slice.
