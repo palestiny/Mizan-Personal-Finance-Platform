@@ -70,7 +70,7 @@ namespace Mizan.Infrastructure.Migrations
                 b.Property<DateTimeOffset>("RecordedAt").HasColumnType("timestamp with time zone");
                 b.Property<int>("Type").HasColumnType("integer");
                 b.HasKey("Id");
-                b.HasIndex("OriginalOperationId").IsUnique().HasFilter("\"original_operation_id\" IS NOT NULL");
+                b.HasIndex("OriginalOperationId").IsUnique().HasFilter("\"OriginalOperationId\" IS NOT NULL");
                 b.ToTable("financial_operations", (string)null);
             });
 
