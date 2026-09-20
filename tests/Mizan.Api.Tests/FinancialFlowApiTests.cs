@@ -62,8 +62,25 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
         });
         conflict.StatusCode.Should().Be(HttpStatusCode.Conflict);
 
+        var concurrentRequests = Enumerable.Range(0, 2).Select(_ =>
+            _client.PostAsJsonAsync("/api/operations/income", new
+            {
+                accountId = account.Id,
+                amountMinorUnits = 5000,
+                currency = "EGP",
+                effectiveAt = "2026-09-20T11:00:00+03:00",
+                idempotencyKey = "api-concurrent-1"
+            })).ToArray();
+
+        var concurrentResponses = await Task.WhenAll(concurrentRequests);
+        concurrentResponses.Should().OnlyContain(x => x.StatusCode == HttpStatusCode.OK);
+
+        var concurrentOperations = await Task.WhenAll(
+            concurrentResponses.Select(x => x.Content.ReadFromJsonAsync<OperationResponse>()));
+        concurrentOperations.Select(x => x!.Id).Distinct().Should().ContainSingle();
+
         var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
-        balance!.AmountMinorUnits.Should().Be(10000);
+        balance!.AmountMinorUnits.Should().Be(15000);
     }
 
     private sealed record AccountResponse(Guid Id);
