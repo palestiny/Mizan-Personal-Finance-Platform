@@ -2,8 +2,8 @@
 
 ## Current status
 
-**Phase:** M0 — Product & Domain Foundation  
-**Implementation status:** No production code yet  
+**Phase:** M2 — Trustworthy Financial Core  
+**Implementation status:** Explicit reversal capability implemented and runtime-verified  
 **Source of truth:** This GitHub repository
 
 ## Product direction
@@ -64,17 +64,42 @@ Major decisions require an explicit design gate. Strategic hypotheses are docume
 
 “Large-company quality” does **not** mean introducing unnecessary microservices or complexity before the domain requires them.
 
-## M0 design gates
+## Current approved foundation
 
-Product/domain foundation:
-- DG-001 — Product Scope
-- DG-013 — Product Strategy
-- DG-002 — Financial Domain Model
-- DG-003 — Financial Invariants
-- DG-004 — Transaction Model
-- DG-005 — Balance Model
+- **Authoritative financial model:** Operation + Effect
+- **Immutable truth:** accepted Operations and Effects are immutable
+- **Correction model:** new Operations/Effects; current implemented correction primitive is explicit Reversal
+- **MVP operations:** Income, PersonalExpense, OwnedAccountTransfer, plus Reversal
+- **MVP accounts:** Cash, Bank, Wallet
+- **Currency:** explicit, single-currency MVP
+- **Runtime:** ASP.NET Core/.NET 8, PostgreSQL, EF Core + Npgsql, REST/JSON
+- **Architecture:** modular monolith with Domain/Application/Infrastructure/API boundaries
+- **Testing:** xUnit + FluentAssertions + integration/API verification
+- **Balance:** derived from authoritative Effects and rebuildable
+- **Idempotency:** stable client-provided keys for retryable balance-changing commands
+
+## Verified implementation
+
+The M1 thin vertical slice and the M2 explicit reversal capability are implemented and verified through GitHub Actions.
+
+The current reversal capability verifies:
+
+- exact inverse Effects
+- immutable original Operation/Effects
+- explicit `OriginalOperationId` linkage
+- Reversal cannot target another Reversal
+- at most one Reversal per original Operation
+- idempotent retry and conflicting-key behavior
+- PostgreSQL persistence and committed EF migration
+- API behavior and integration tests
+- concurrent duplicate protection for balance-changing commands
+
+The latest documented M2 verification is recorded in `docs/00-Governance/CHECKPOINTS.md`.
+
+## Architecture gates
 
 Architecture gates are opened just in time when a concrete requirement makes them necessary:
+
 - DG-006 — Offline-First Strategy
 - DG-007 — Persistence Architecture
 - DG-008 — Synchronization
