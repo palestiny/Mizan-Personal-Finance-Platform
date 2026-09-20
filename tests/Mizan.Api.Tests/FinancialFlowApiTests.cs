@@ -30,7 +30,7 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
         var duplicateOperation = await duplicate.Content.ReadFromJsonAsync<OperationResponse>();
         duplicateOperation!.Id.Should().Be(firstOperation!.Id);
 
-        var conflict = await _client.PostAsJsonAsync("/api/operations/income", incomeRequest with { amountMinorUnits = 11000 });
+        var conflict = await _client.PostAsJsonAsync("/api/operations/income", new { accountId = account.Id, amountMinorUnits = 11000, currency = "EGP", effectiveAt = "2026-09-20T10:00:00+03:00", idempotencyKey = "api-flow-1" });
         conflict.StatusCode.Should().Be(HttpStatusCode.Conflict);
 
         var concurrentRequests = Enumerable.Range(0, 2).Select(_ => _client.PostAsJsonAsync("/api/operations/income", new
