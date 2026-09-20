@@ -22,10 +22,15 @@ public sealed class FinanceService
             throw new DomainValidationException("Idempotency key is required.");
 
         var existing = await _repository.GetOperationByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
-        if (existing is not null)
-            return existing;
-
         var operation = builder.Accept();
+
+        if (existing is not null)
+        {
+            if (!SemanticallyMatches(existing, operation))
+                throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
+            return existing;
+        }
         await _repository.BeginTransactionAsync(cancellationToken);
         try
         {
@@ -43,4 +48,23 @@ public sealed class FinanceService
 
     public async Task<IReadOnlyList<FinancialEffect>> GetEffectsAsync(Guid accountId, CancellationToken cancellationToken) =>
         await _repository.GetEffectsAsync(accountId, cancellationToken);
+}
+
+    private static bool SemanticallyMatches(FinancialOperation existing, FinancialOperation candidate)
+    {
+        if (existing.Type != candidate.Type ||
+            existing.EffectiveAt != candidate.EffectiveAt ||
+            existing.Effects.Count != candidate.Effects.Count)
+            return false;
+
+        return existing.Effects
+            .OrderBy(x => x.Order)
+            .Zip(candidate.Effects.OrderBy(x => x.Order))
+            .All(pair =>
+                pair.First.AccountId == pair.Second.AccountId &&
+                pair.First.Amount == pair.Second.Amount &&
+                pair.First.Direction == pair.Second.Direction &&
+                pair.First.Order == pair.Second.Order &&
+                pair.First.EffectiveAt == pair.Second.EffectiveAt);
+    }
 }
