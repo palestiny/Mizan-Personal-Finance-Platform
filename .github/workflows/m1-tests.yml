@@ -32,5 +32,14 @@ jobs:
           dotnet-version: 8.0.x
       - name: Restore
         run: dotnet restore Mizan.sln
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef --version 8.0.20
+      - name: Generate initial migration artifact
+        run: dotnet ef migrations add InitialFinancialCore --project src/Mizan.Infrastructure --startup-project src/Mizan.Api --output-dir Migrations
+      - name: Upload generated migration
+        uses: actions/upload-artifact@v4
+        with:
+          name: initial-financial-core-migration
+          path: src/Mizan.Infrastructure/Migrations
       - name: Test
         run: dotnet test Mizan.sln --configuration Release --no-restore
