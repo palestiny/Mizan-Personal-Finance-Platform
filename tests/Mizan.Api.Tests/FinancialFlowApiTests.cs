@@ -348,6 +348,39 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
+    public async Task Api_should_return_same_shared_expense_for_idempotent_retry()
+    {
+        var account = await CreateAccountAsync("Shared Expense Retry");
+
+        var request = new
+        {
+            accountId = account.Id,
+            totalAmountMinorUnits = 1000,
+            recoverableAmountMinorUnits = 400,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "shared-expense-retry-1"
+        };
+
+        var first = await _client.PostAsJsonAsync("/api/operations/shared-expense", request);
+        var second = await _client.PostAsJsonAsync("/api/operations/shared-expense", request);
+
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var firstOperation = await first.Content.ReadFromJsonAsync<OperationResponse>();
+        var secondOperation = await second.Content.ReadFromJsonAsync<OperationResponse>();
+
+        secondOperation!.Id.Should().Be(firstOperation!.Id);
+        secondOperation.RecoverableEffects.Should().ContainSingle();
+        secondOperation.RecoverableEffects[0].RecoverableId.Should().Be(firstOperation.RecoverableEffects[0].RecoverableId);
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(4000);
+    }
+
+    [Fact]
     public async Task Api_should_reject_invalid_shared_expense_recoverable_portion()
     {
         var account = await CreateAccountAsync("Shared Expense Invalid");
@@ -415,14 +448,14 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
             effectiveAt = "2026-09-23T10:00:00+03:00",
             idempotencyKey = "shared-expense-reversal-1"
         });
-        reversal.StatusCode.Should().Be(HttpStatusCode.OK);
+        reversal.StatusCode.Should().Be(HttpStatusCode.BadRequest);
 
-        var afterReversal = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
-        afterReversal!.OutstandingMinorUnits.Should().Be(0);
-        afterReversal.Status.Should().Be("Settled");
+        var afterRejectedReversal = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
+        afterRejectedReversal!.OutstandingMinorUnits.Should().Be(200);
+        afterRejectedReversal.Status.Should().Be("Outstanding");
 
         var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
-        balance!.AmountMinorUnits.Should().Be(5000);
+        balance!.AmountMinorUnits.Should().Be(4600);
     }
 
     private async Task<AccountResponse> CreateAccountAsync(string name, long? openingBalanceMinorUnits = null)
