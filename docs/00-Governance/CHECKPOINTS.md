@@ -165,3 +165,13 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Migration:** First versioned EF Core migration is committed and successfully applied by CI.
 - **Remaining M1 checkpoint:** documentation/acceptance closure only; no known failing runtime behavior remains in the verified slice.
 - **Next:** close M1 as a verified thin technical foundation, then move to the next approved roadmap capability without introducing unneeded architecture.
+
+
+## CP-011 — M1 Thin Vertical Slice Verified
+- **Status:** Verified; closure pending Product Owner acceptance
+- **Date:** 2026-09-21
+- **Phase:** M1 — Thin Vertical Slice Implementation
+- **Verification:** The approved slice is implemented and verified through domain, application, API, PostgreSQL, migration, idempotency, atomicity, deterministic history/explanation, and rebuildability tests.
+- **CI evidence:** The latest verification run completed successfully after the final idempotency test-harness correction.
+- **M1 Definition-of-Done:** All technical conditions in the accepted M1 design are now evidenced. No new architecture is required to close the slice.
+- **Next:** Product Owner closure of M1, then open the next roadmap gate only when its concrete requirements justify it.
