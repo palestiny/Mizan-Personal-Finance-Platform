@@ -31,7 +31,7 @@ Only an accepted financial operation may produce authoritative effects.
 
 ### I-003 — No floating-point money
 
-Authoritative monetary calculations must not use binary floating-point representation.
+Authoritative monetary calculations must not use binary floating-point representation. MVP monetary values use integer minor units behind a domain `Money` abstraction; callers do not manipulate raw numeric primitives as financial truth.
 
 ### I-004 — Valid monetary amount
 
@@ -217,7 +217,18 @@ Rebuilding derived state from authoritative effects produces the same accepted f
 - informational/no-effect operations are not part of the MVP balance-changing financial truth unless explicitly introduced;
 - concurrency/conflict behavior is a downstream architecture policy for multi-device/offline scenarios.
 
-## 14. Candidate verification matrix
+## 14. Invariant tiers
+
+### Tier 1 — Non-negotiable financial invariants
+I-001 through I-009, I-010 through I-015, I-018 through I-020, I-021 through I-023, and I-025 through I-031 are mandatory correctness constraints.
+
+### Tier 2 — Domain policies
+Zero-value behavior, explicit fee/adjustment semantics, operation-specific effect cardinality, and informational-operation policy are domain policies that must be explicit before the relevant behavior is implemented.
+
+### Tier 3 — Future architecture policies
+Multi-device/offline concurrency/conflict behavior, persistence-level idempotency mechanics, and other infrastructure-specific enforcement details are intentionally deferred to downstream gates without weakening Tier 1 invariants.
+
+## 15. Candidate verification matrix
 
 | Category | Required verification |
 |---|---|
@@ -235,7 +246,7 @@ Rebuilding derived state from authoritative effects produces the same accepted f
 | Validation | domain rules independent of UI |
 | Evidence/AI | cannot mutate authoritative truth |
 
-## 15. Gate dependencies
+## 16. Gate dependencies
 
 DG-003 depends on:
 DG-001 Product Scope → DG-002 Domain Model
@@ -245,7 +256,7 @@ DG-004 Transaction Model → DG-005 Balance Model
 
 No production financial implementation should depend on unresolved invariant policy.
 
-## 16. Decision record
+## 17. Decision record
 
 **Decision:** Accepted  
 **Decision owner:** Khaled  
