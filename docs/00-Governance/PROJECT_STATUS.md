@@ -69,7 +69,7 @@ The RED suite specifies:
 Issue #10 tracks the RED-test checkpoint.
 
 ## Verification status
-The GitHub Actions workflow `.github/workflows/m1-tests.yml` was added to execute restore and test on the M1 branch. The GitHub connector has not yet reported a workflow run for the latest workflow commit, so no GREEN/RED runtime result is claimed here.
+The GitHub Actions workflow `.github/workflows/m1-tests.yml` executes restore, build, committed EF migrations against PostgreSQL, and the full test suite. Runs #105–#108 completed successfully after resolving compile, test-harness, API timestamp, and idempotency-semantics issues. GREEN is now verified on GitHub.
 
 ## Accepted controlled sequence
 **M1 thin vertical slice implementation → trustworthy core → validated capture → understanding → intelligence → action → expansion**
@@ -92,10 +92,10 @@ The production path now contains:
 - thin HTTP endpoints for account creation, income, expense, transfer, balance, history, and explanation;
 - CI PostgreSQL service configuration for integration verification.
 
-A temporary EnsureCreated path is restricted to the Testing environment. It is not the production migration strategy. The accepted EF Core migration strategy still requires the first committed versioned migration.
+A temporary EnsureCreated path is restricted to the Testing environment. It is not the production migration strategy. The first committed versioned EF Core migration is now present and CI applies it successfully against PostgreSQL.
 
 ## Next action
-Run and verify the real CI suite, resolve any compile/runtime failures by root cause, then generate and commit the first EF Core migration and harden idempotency conflict/concurrency semantics. Do not add architecture that the accepted slice does not require.
+Close the M1 verification/documentation checkpoint, then evaluate the remaining M1 Definition-of-Done gap: explicit rebuild/reconciliation verification from authoritative Effects. Do not add architecture that the accepted slice does not require.
 
 
 ## Verification rule
