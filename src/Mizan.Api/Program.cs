@@ -12,6 +12,25 @@ builder.Services.AddScoped<FinanceService>();
 
 var app = builder.Build();
 
+app.UseExceptionHandler(errorApp =>
+{
+    errorApp.Run(async context =>
+    {
+        var exception = context.Features.Get<Microsoft.AspNetCore.Diagnostics.IExceptionHandlerFeature>()?.Error;
+        context.Response.StatusCode = exception switch
+        {
+            IdempotencyConflictException => StatusCodes.Status409Conflict,
+            DomainValidationException => StatusCodes.Status400BadRequest,
+            _ => StatusCodes.Status500InternalServerError
+        };
+        await Results.Problem(
+            statusCode: context.Response.StatusCode,
+            title: context.Response.StatusCode == StatusCodes.Status409Conflict ? "Idempotency conflict" :
+                   context.Response.StatusCode == StatusCodes.Status400BadRequest ? "Validation error" :
+                   "Internal server error").ExecuteAsync(context);
+    });
+}
+
 if (app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
