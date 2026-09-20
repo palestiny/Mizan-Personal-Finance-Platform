@@ -31,6 +31,36 @@ public sealed class EfFinanceRepository : IFinanceRepository
         return r is null ? null : Account.Rehydrate(r.Id, r.Name, (AccountType)r.Type, r.Currency, Money.FromMinorUnits(r.OpeningBalanceMinorUnits, r.Currency));
     }
 
+    public async Task<FinancialOperation?> GetOperationAsync(Guid operationId, CancellationToken cancellationToken)
+    {
+        var op = await _db.Operations.AsNoTracking().SingleOrDefaultAsync(x => x.Id == operationId, cancellationToken);
+        if (op is null) return null;
+
+        var effects = await _db.Effects.AsNoTracking()
+            .Where(x => x.OperationId == op.Id)
+            .OrderBy(x => x.Order)
+            .ToListAsync(cancellationToken);
+        var reversal = await _db.Operations.AsNoTracking()
+            .Where(x => x.OriginalOperationId == op.Id)
+            .Select(x => (Guid?)x.Id)
+            .SingleOrDefaultAsync(cancellationToken);
+
+        return Rehydrate(op, effects, reversal);
+    }
+
+    public async Task<FinancialOperation?> GetReversalByOriginalOperationIdAsync(Guid originalOperationId, CancellationToken cancellationToken)
+    {
+        var op = await _db.Operations.AsNoTracking()
+            .SingleOrDefaultAsync(x => x.OriginalOperationId == originalOperationId, cancellationToken);
+        if (op is null) return null;
+
+        var effects = await _db.Effects.AsNoTracking()
+            .Where(x => x.OperationId == op.Id)
+            .OrderBy(x => x.Order)
+            .ToListAsync(cancellationToken);
+        return Rehydrate(op, effects, op.OriginalOperationId);
+    }
+
     public async Task<FinancialOperation?> GetOperationByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken)
     {
         var key = await _db.IdempotencyKeys.AsNoTracking().SingleOrDefaultAsync(x => x.Key == idempotencyKey, cancellationToken);
@@ -38,12 +68,12 @@ public sealed class EfFinanceRepository : IFinanceRepository
 
         var op = await _db.Operations.AsNoTracking().SingleAsync(x => x.Id == key.OperationId, cancellationToken);
         var effects = await _db.Effects.AsNoTracking().Where(x => x.OperationId == op.Id).OrderBy(x => x.Order).ToListAsync(cancellationToken);
-        return Rehydrate(op, effects);
+        return Rehydrate(op, effects, op.OriginalOperationId);
     }
 
     public Task AddAcceptedOperationAsync(FinancialOperation operation, string idempotencyKey, CancellationToken cancellationToken)
     {
-        _db.Operations.Add(new OperationRecord { Id = operation.Id, Type = (int)operation.Type, EffectiveAt = operation.EffectiveAt, RecordedAt = operation.RecordedAt });
+        _db.Operations.Add(new OperationRecord { Id = operation.Id, Type = (int)operation.Type, EffectiveAt = operation.EffectiveAt, RecordedAt = operation.RecordedAt, OriginalOperationId = operation.OriginalOperationId });
         foreach (var effect in operation.Effects)
             _db.Effects.Add(new EffectRecord
             {
@@ -77,14 +107,15 @@ public sealed class EfFinanceRepository : IFinanceRepository
         if (_transaction is not null) await _transaction.RollbackAsync(cancellationToken);
     }
 
-    private static FinancialOperation Rehydrate(OperationRecord op, IReadOnlyList<EffectRecord> effects)
+    private static FinancialOperation Rehydrate(OperationRecord op, IReadOnlyList<EffectRecord> effects, Guid? originalOperationId)
     {
         return FinancialOperation.Rehydrate(
             op.Id,
             (FinancialOperationType)op.Type,
             op.EffectiveAt,
             op.RecordedAt,
-            effects.Select(ToDomain).ToArray());
+            effects.Select(ToDomain).ToArray(),
+            originalOperationId);
     }
 
     private static FinancialEffect ToDomain(EffectRecord row) =>
