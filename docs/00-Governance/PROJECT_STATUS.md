@@ -4,7 +4,7 @@
 **M2 — Trustworthy Financial Core**
 
 ## Current state
-**Status: M2 explicit reversal implementation verified in GitHub CI; the next M2 capability is not yet opened behind a design gate.**
+**Status: M2 account lifecycle implemented, merged, and runtime-verified in GitHub CI.**
 
 **Production implementation:** domain foundation + EF Core/PostgreSQL persistence boundary + thin API path + explicit reversal capability are implemented and runtime-verified.
 
@@ -37,7 +37,7 @@ The accepted direction is Mizan as a globally applicable Personal Financial Oper
 | RED tests | **Established** |
 | M1 thin vertical slice | **Implemented and verified** |
 | M2 explicit reversal | **Implemented and runtime-verified** |
-| M2 account lifecycle | **Implemented; runtime verification pending CI** |
+| M2 account lifecycle | **Implemented, merged, and runtime-verified** |
 
 ## Accepted domain foundation
 **Operation + Effect** is the authoritative financial model.
@@ -69,9 +69,9 @@ The GitHub Actions workflow `.github/workflows/m1-tests.yml` executes restore, b
 - API and PostgreSQL migration coverage
 - Domain, Application, and API verification
 - Concurrent duplicate protection
-- Latest documented verification: GitHub Actions run #128
+- Latest documented verification: GitHub Actions run #130
 
-## Implemented M2 account lifecycle capability
+## Verified M2 account lifecycle capability
 - Account lifecycle uses Active / Closed states.
 - New accounts are Active.
 - Close and Reopen are explicit application commands.
@@ -91,7 +91,7 @@ The GitHub Actions workflow `.github/workflows/m1-tests.yml` executes restore, b
 - No separate Correction primitive is introduced at this stage; a future correction workflow may compose Reversal + Replacement at the application level.
 
 ## Next action
-Verify the Account Lifecycle implementation through GitHub CI. If GREEN, record CP-013 as completed and continue M2 only when the next concrete capability requires a design gate. Do not open another M2 architecture/design gate speculatively. Identify the next concrete M2 capability from the accepted roadmap, and open a design gate only if that capability introduces a material product, domain, or architecture decision. Then follow the normal Understand → Map → Design → Trade-offs → Decide → Document → Test → Implement → Review → Verify flow.
+Account Lifecycle is GREEN and merged. Continue M2 by identifying the next concrete capability from the accepted roadmap. Do not open another M2 architecture/design gate speculatively; open a gate only when the next capability introduces a material product, domain, or architecture decision. Then follow the normal Understand → Map → Design → Trade-offs → Decide → Document → Test → Implement → Review → Verify flow.
 
 ## Verification rule
 A document is not treated as approved merely because it exists. Gate status and decision records must reflect explicit Product Owner acceptance.
