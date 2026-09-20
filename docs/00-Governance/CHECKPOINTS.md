@@ -177,16 +177,6 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Next:** Product Owner closure of M1, then open the next roadmap gate only when its concrete requirements justify it.
 
 
-## CP-012 — M2 Correction/Reversal Design Gate
-- **Status:** Accepted
-- **Date:** 2026-09-21
-- **Phase:** M2 — Trustworthy Financial Core
-- **Gate:** M2 correction/reversal semantics
-- **Product Owner decision:** Option A — Explicit Reversal Operation.
-- **Accepted semantics:** Reversal is a first-class immutable Operation referencing `OriginalOperationId`; it produces exact inverse Effects; the original Operation/Effects remain immutable; Reversal cannot target another Reversal; an accepted Operation can have at most one Reversal; retries use the existing idempotency contract; a second reversal attempt is rejected.
-- **Future correction boundary:** A user-facing correction workflow may be composed from Reversal + Replacement Operation. No separate Correction primitive is introduced at this stage.
-- **Next:** RED tests for the accepted reversal contract before production implementation.
-
 
 ## CP-012 — M2 Correction/Reversal Design Gate
 - **Status:** Completed and runtime-verified
