@@ -25,6 +25,7 @@ namespace Mizan.Infrastructure.Migrations
                 b.Property<string>("Currency").IsRequired().HasMaxLength(3).HasColumnType("character varying(3)");
                 b.Property<string>("Name").IsRequired().HasMaxLength(200).HasColumnType("character varying(200)");
                 b.Property<long>("OpeningBalanceMinorUnits").HasColumnType("bigint");
+                b.Property<int>("Status").HasColumnType("integer");
                 b.Property<int>("Type").HasColumnType("integer");
                 b.HasKey("Id");
                 b.HasIndex("Name", "Currency");
