@@ -82,3 +82,28 @@ Accept the mandatory financial invariants that govern authoritative financial tr
 
 ### Next checkpoint
 **CP-004 — Transaction Model Decision Gate (DG-004)**
+
+
+## CP-004 — Transaction Model
+**Date:** 2026-09-20  
+**Phase:** M0 — Product & Domain Foundation  
+**Status:** Completed
+
+### Objective
+Accept transaction boundaries and lifecycle semantics before defining the balance model.
+
+### Accepted gate
+- DG-004 Transaction Model — Accepted
+
+### Verification
+- Operation Command is the transaction boundary
+- Commands are separate from immutable accepted Operations
+- Validation precedes effect derivation and atomic commit
+- Idempotency applies to retryable balance-changing commands
+- Correction/Reversal creates new Operations/Effects
+- effective_at and recorded_at are retained
+- Accepted results are explanation-ready
+- Issue #6 closed as completed
+
+### Next checkpoint
+**CP-005 — Balance Model Decision Gate (DG-005)**
