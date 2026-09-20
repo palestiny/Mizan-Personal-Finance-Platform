@@ -286,6 +286,6 @@ public sealed class FinanceService
                  (existing.Type == FinancialOperationType.SharedExpense && candidate.Type == FinancialOperationType.SharedExpense)) &&
                  pair.First.Direction == pair.Second.Direction &&
                  pair.First.Amount == pair.Second.Amount &&
-                 string.Equals(pair.First.CounterpartyName, pair.Second.CounterpartyName, StringComparison.Ordinal)));
+                 string.Equals(pair.First.CounterpartyName, pair.Second.CounterpartyName, StringComparison.Ordinal));
     }
 }
