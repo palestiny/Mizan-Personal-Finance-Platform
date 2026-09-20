@@ -188,3 +188,14 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Verification:** GitHub Actions run #127 completed successfully. Build, migration application, Domain tests, Application tests, API income/idempotency/concurrency/balance/reversal scenarios all GREEN.
 - **Root-cause fixes during implementation:** EF migration metadata/designer was initially missing, causing the new migration not to be discovered; this was corrected. Duplicate test command models were also removed.
 - **Next:** Continue M2 only when the next capability requires a concrete design gate. No separate Correction primitive is introduced.
+
+
+## CP-013 — M2 Account Lifecycle
+- **Status:** Implementation complete; runtime verification pending CI
+- **Date:** 2026-09-21
+- **Phase:** M2 — Trustworthy Financial Core
+- **Gate:** DG-014 Account Lifecycle
+- **Product Owner decision:** Active / Closed lifecycle with reopening; normal new balance-changing operations blocked on Closed accounts; historical Reversal remains allowed after closure.
+- **Implemented:** domain lifecycle state and transitions, application close/reopen commands, normal-operation account-state validation, persistence status, EF migration/designer/snapshot, API endpoints, and verification tests.
+- **Verification contract:** new accounts Active; close/reopen and invalid transitions; Closed-account operation rejection; readable balance; reversal after closure; PostgreSQL persistence.
+- **Next:** GitHub CI verification and root-cause correction of any failing behavior before marking this checkpoint GREEN.
