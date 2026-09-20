@@ -6,61 +6,34 @@
 
 ## Repository state
 
-The repository was verified before project initialization:
-
-- Repository: `palestiny/Mizan-Personal-Finance-Platform`
-- Default branch: `main`
+- Repository: palestiny/Mizan-Personal-Finance-Platform
+- Default branch: main
 - Repository visibility: public
-- Initial repository size: empty
-- No existing branches were present at baseline
-- No existing commits were present at baseline
-- GitHub access for the project owner is available with push/administrative permissions
+- Initial repository was empty
+- No production code existed at baseline
 
-Because an empty GitHub repository has no parent commit, the first bootstrap commit on `main` is an intentional repository-initialization exception. After bootstrap, normal project work should proceed through topic branches and pull requests.
-
-## Reference material reviewed
-
-The project owner supplied:
-
-- `PERSONAL FINANCE APP — ENGINEERING KICKOFF & DEVELOPMENT CONTRACT`
-- `KHALED_ENGINEERING_PLAYBOOK.md`
-
-These materials are reference inputs for the project. Their useful engineering principles are being adapted to Mizan; project-specific domain and architecture decisions are not considered approved merely because they appear in a reference document.
+The first bootstrap commit on main was an intentional empty-repository exception. Normal project work should proceed through topic branches and review.
 
 ## Current project phase
 
 **M0 — Product & Domain Foundation**
 
-The objective of M0 is to establish a defensible product and domain foundation before production implementation.
+M0 establishes the product and financial-domain foundation before production implementation.
 
-## Current implementation state
+## Current direction
 
-No production application code, database schema, API, mobile UI, authentication implementation, or infrastructure has been approved or implemented yet.
+Mizan is being designed as a global Personal Financial Operating System with trusted financial truth, frictionless capture, AI-assisted interpretation, explainable intelligence, controlled action, and commercial validation.
 
-## Known constraints and priorities
-
-The current product direction requires consideration of:
-
-- Mobile-first user experience
-- Reliable financial records
-- Accurate balances and history
-- Offline operation as an important candidate capability
-- Secure handling of personal financial information
-- Long-term maintainability and evolution
-- A professional engineering and verification process
-
-These are direction-setting constraints. Detailed technical choices remain subject to design gates.
+Egypt and initial personal use are validation context, not the product boundary.
 
 ## Bootstrap acceptance criteria
 
-The repository is considered successfully bootstrapped when:
-
 1. Git history exists.
-2. The project status and baseline are documented.
-3. The M0 roadmap and design-gate map are documented.
-4. No unapproved technical architecture has been represented as final.
+2. Project status and baseline are documented.
+3. M0 roadmap and design-gate map are documented.
+4. No unapproved technical architecture is represented as final.
 5. The next decision is explicit and traceable.
 
 ## Next checkpoint
 
-Proceed to **DG-001 — Product Scope** after the bootstrap foundation is reviewed.
+Proceed through **DG-001 + DG-013 — Product & Strategy Decision Gates**. Downstream domain and architecture proposals remain unapproved until their gates are explicitly closed.
