@@ -41,21 +41,23 @@ public sealed class TestFinanceApplication
 
     public Task<FinancialOperation> AcceptExpenseAsync(AcceptExpenseCommand command)
     {
-        if (_idempotency.TryGetValue(command.IdempotencyKey, out var existing))
-            return Task.FromResult(existing);
-
         var account = GetAccount(command.AccountId);
         ValidateCurrency(account, command.Amount.Currency);
         var operation = FinancialOperation.PersonalExpense(account.Id, Money.FromMinorUnits(command.Amount.MinorUnits, command.Amount.Currency), Parse(command.EffectiveAt)).Accept();
+
+        if (_idempotency.TryGetValue(command.IdempotencyKey, out var existing))
+        {
+            if (!SemanticallyMatches(existing, operation))
+                throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
+            return Task.FromResult(existing);
+        }
         Commit(command.IdempotencyKey, operation);
         return Task.FromResult(operation);
     }
 
     public Task<FinancialOperation> TransferAsync(TransferCommand command)
     {
-        if (_idempotency.TryGetValue(command.IdempotencyKey, out var existing))
-            return Task.FromResult(existing);
-
         var source = GetAccount(command.SourceAccountId);
         var destination = GetAccount(command.DestinationAccountId);
         ValidateCurrency(source, command.Amount.Currency);
@@ -65,6 +67,14 @@ public sealed class TestFinanceApplication
             source.Id, destination.Id,
             Money.FromMinorUnits(command.Amount.MinorUnits, command.Amount.Currency),
             Parse(command.EffectiveAt)).Accept();
+
+        if (_idempotency.TryGetValue(command.IdempotencyKey, out var existing))
+        {
+            if (!SemanticallyMatches(existing, operation))
+                throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
+            return Task.FromResult(existing);
+        }
 
         Commit(command.IdempotencyKey, operation);
         return Task.FromResult(operation);
