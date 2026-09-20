@@ -177,6 +177,23 @@ Risk:
 
 **Working candidate:** A for MVP, with import designed as a later capability unless there is a concrete migration requirement.
 
+
+## Product-wide extensibility principles
+
+The product is being started from a personal use case in Egypt, but the architecture and domain are **not to be customized around Khaled, Egypt, Arabic, or one financial workflow**. The initial use case is a validation and dogfooding context only.
+
+The target product direction is globally applicable: different countries, languages, currencies, account providers, user circumstances, and future market needs should be supported through explicit extensibility and localization boundaries rather than core-domain rewrites.
+
+The product should be capable of becoming a real commercial service that solves validated customer problems and can generate sustainable revenue. Business/revenue capabilities must remain separate from financial truth and must not weaken correctness, privacy, auditability, or user control.
+
+### Financial-event input boundary
+
+Manual entry is only one possible input. The product must be able to evolve toward receipt/image capture, voice capture, bank notifications/messages, integrations, and other evidence channels. These channels must normalize into the same authoritative domain rules; an image, voice transcription, or bank message is evidence/input, not financial truth by itself.
+
+### Net-financial-effect boundary
+
+Not every payment that a user makes is necessarily a personal expense. The domain must remain capable of distinguishing personal financial effects from pass-through payments, reimbursements/receivables, advances/shared expenses, and informational records with no balance effect. Exact transaction semantics are deferred to DG-004 rather than hard-coded here.
+
 ## Cross-decision consistency checks
 
 Before accepting DG-001, the chosen options must satisfy these constraints:
