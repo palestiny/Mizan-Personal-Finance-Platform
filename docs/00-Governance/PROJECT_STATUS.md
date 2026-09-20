@@ -1,11 +1,11 @@
 # Project Status
 
 ## Current phase
-**M0 — Product & Domain Foundation**
+**M1 — Thin Vertical Slice Implementation**
 
 ## Current state
 **Status:** In progress  
-**Production implementation:** M1 thin vertical slice — design accepted, implementation not started
+**Production implementation:** Runtime stack accepted; RED-test phase starting
 
 ## Accepted product and strategy gates
 - **DG-001 Product Scope:** Accepted
@@ -29,7 +29,7 @@ The accepted direction is Mizan as a globally applicable Personal Financial Oper
 | Financial invariants | **Accepted** |
 | Transaction model | **Accepted** |
 | Balance model | **Accepted** |
-| Production code | Not started |
+| Production code | Not started; RED-test phase starting |
 
 ## Accepted domain foundation
 **Operation + Effect** is the authoritative financial model.
@@ -49,7 +49,7 @@ Evidence and Proposal are surrounding concepts. Evidence is not financial truth.
 - Pricing and packaging remain validation questions.
 
 ## Next action
-Proceed with **RED tests for the M1 thin vertical slice**. M0 domain foundation and M1 architecture decisions are accepted.
+Proceed with **RED tests for the M1 thin vertical slice** using the accepted runtime stack. Runtime technology gate is accepted.
 
 ## Verification rule
 A document is not treated as approved merely because it exists. Gate status and decision records must reflect explicit Product Owner acceptance.
