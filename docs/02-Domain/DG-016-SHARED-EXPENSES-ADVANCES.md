@@ -3,6 +3,8 @@
 ## Status
 **Accepted — Product Owner approved 2026-09-21**
 
+Implementation refinement: a reversal of a recoverable-creating operation is rejected when prior settlements would make the recoverable balance negative. This preserves the non-negative recoverable invariant; settlements must be reversed first.
+
 ## Problem
 Mizan must represent cases where a person pays an amount that is partly their own expense and partly an amount recoverable from another person.
 
@@ -63,7 +65,7 @@ Reversal of a SharedExpense reverses both:
 - its Account Effect;
 - its Recoverable Effect.
 
-The original operation remains immutable.
+If the recoverable portion has already been partially settled, reversing the SharedExpense directly is rejected because it would create a negative recoverable balance. The settlement reversal must happen first. The original operation remains immutable.
 
 ## Invariants
 - Total account decrease equals the submitted total payment.
@@ -73,7 +75,8 @@ The original operation remains immutable.
 - Total payment and recoverable portion use the same currency.
 - Counterparty name is required and normalized.
 - Normal SharedExpense requires an Active account.
-- Historical reversal remains allowed after account closure.
+- Historical reversal remains allowed after account closure when recoverable invariants remain valid.
+- Reversal cannot make a recoverable balance negative.
 - Idempotent retry returns the original accepted SharedExpense when command semantics match.
 - Conflicting reuse of an idempotency key is rejected.
 
@@ -109,4 +112,5 @@ Add domain/application/API coverage for:
 - invalid recoverable portion;
 - currency mismatch;
 - reversal;
+- reversal after partial settlement is rejected without state corruption;
 - idempotent retry/conflict.
