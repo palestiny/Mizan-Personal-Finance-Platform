@@ -46,8 +46,12 @@ jobs:
         run: dotnet test tests/Mizan.Domain.Tests/Mizan.Domain.Tests.csproj --configuration Release --no-restore --no-build
       - name: Test — Application
         run: dotnet test tests/Mizan.Application.Tests/Mizan.Application.Tests.csproj --configuration Release --no-restore --no-build
-      - name: Test — API — Income Idempotency
-        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_accept_income_and_enforce_idempotency_conflict"
+      - name: Test — API — Income
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_accept_income"
+      - name: Test — API — Retry
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_return_same_operation_for_idempotent_retry"
+      - name: Test — API — Conflict
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_reject_different_command_under_same_idempotency_key"
       - name: Test — API — Concurrent Duplicate
         run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_protect_concurrent_duplicate_income"
       - name: Test — API — Balance
