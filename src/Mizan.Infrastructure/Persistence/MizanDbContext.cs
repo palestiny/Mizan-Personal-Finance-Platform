@@ -48,6 +48,7 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.HasKey(x => x.Key);
             e.Property(x => x.Key).HasMaxLength(200);
             e.HasIndex(x => x.OperationId).IsUnique();
+            e.Property(x => x.Key).UseCollation("C");
         });
     }
 }
