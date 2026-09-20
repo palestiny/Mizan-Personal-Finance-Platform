@@ -144,3 +144,11 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Coverage:** Money precision, operation/effect semantics, transfer conservation, immutability, derived/rebuildable balance, idempotency, atomicity, deterministic history/explanation, and one API financial path.
 - **Important verification note:** The tests are intentionally ahead of the implementation. No GREEN result is claimed. The GitHub connector did not expose a workflow run for the latest workflow commit yet.
 - **Next:** Minimum domain implementation → make RED tests GREEN → persistence transaction path → API path → rebuild/reconciliation verification.
+
+## CP-009 — M1 PostgreSQL Persistence Boundary + API Path
+- **Status:** Completed implementation checkpoint
+- **Date:** 2026-09-20
+- **Scope:** EF Core/PostgreSQL persistence boundary, application finance service/repository, atomic Operation + Effects + idempotency transaction path, thin financial API, PostgreSQL CI service configuration.
+- **Verification status:** Implementation committed to GitHub; CI runtime result not yet verified because workflow execution has not yet been reported by the GitHub connector.
+- **Known follow-up:** Generate and commit the first versioned EF Core migration; then verify CI and harden idempotency conflict/concurrency behavior.
+- **Issue:** #11
