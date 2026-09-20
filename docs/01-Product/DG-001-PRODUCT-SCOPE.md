@@ -43,7 +43,7 @@ A financial event may arrive through manual entry, receipt/image evidence, voice
 These are input/evidence channels, not separate financial truths.
 
 Future conceptual flow:
-**Evidence/Input → Extraction → Candidate Financial Event → Validation → Confirmation/Policy → Authoritative Financial Record → Intelligence**
+**Evidence/Input → Extraction/Interpretation → Financial Proposal → Domain Validation → Confirmation/Policy → Accepted Financial Operation → Authoritative Financial Effects → Intelligence**
 
 ## Economic-effect boundary
 A payment is not automatically a personal expense.
@@ -62,12 +62,12 @@ Exact semantics belong to DG-002/DG-004.
 
 ## Core product loop
 The minimum trustworthy financial loop remains:
-**Account → Financial Record → Balance → History**
+**Account → Accepted Financial Operation → Financial Effects → Balance → History**
 
 The future product loop expands around it:
 **Capture → Financial Truth → Understanding → Intelligence → Action**
 
-The first loop must be trustworthy before the second can safely become authoritative.
+The first loop must be trustworthy before higher-order intelligence and action can safely depend on it.
 
 ## Proposed MVP boundary
 The MVP should establish the smallest complete and trustworthy financial core:
@@ -78,7 +78,7 @@ The MVP should establish the smallest complete and trustworthy financial core:
 - balances;
 - history;
 - correction rules;
-- local persistence/recovery;
+- a trustworthy persistence/recovery path;
 - required security/privacy;
 - foundations that do not block future evidence and AI capabilities.
 
