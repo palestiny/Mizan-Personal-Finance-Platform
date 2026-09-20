@@ -29,7 +29,7 @@ app.UseExceptionHandler(errorApp =>
                    context.Response.StatusCode == StatusCodes.Status400BadRequest ? "Validation error" :
                    "Internal server error").ExecuteAsync(context);
     });
-}
+});
 
 if (app.Environment.IsEnvironment("Testing"))
 {
