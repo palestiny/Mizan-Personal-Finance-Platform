@@ -27,6 +27,7 @@ Egypt and initial personal use are validation context, not the product boundary.
 - DG-013 Product Strategy — Accepted
 - DG-002 Domain Model — Accepted
 - DG-003 Financial Invariants — Accepted
+- DG-004 Transaction Model — Accepted
 
 ## Accepted domain foundation
 Mizan uses **Operation + Effect** as its authoritative financial model, surrounded by Evidence and Proposal concepts. Accepted operations and effects are immutable; corrections/reversals create new operations/effects; AI and evidence cannot directly mutate authoritative financial state.
@@ -39,4 +40,4 @@ Mizan uses **Operation + Effect** as its authoritative financial model, surround
 5. The next decision is explicit and traceable.
 
 ## Current next decision
-Proceed through **DG-004 — Transaction Model Decision Gate**. Balance and technical architecture proposals remain unapproved until their gates are explicitly closed.
+Proceed through **DG-005 — Balance Model Decision Gate**. Balance and technical architecture proposals remain unapproved until their gates are explicitly closed.
