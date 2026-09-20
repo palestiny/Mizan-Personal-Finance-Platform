@@ -1,7 +1,7 @@
 # DG-004 — Transaction Model Decision Gate
 
 ## Status
-**State:** Draft — decision-ready candidate only
+**State:** Accepted — Product Owner approved 2026-09-20
 **Phase:** M0 — Product & Domain Foundation
 
 This gate defines candidate transaction semantics without silently approving unresolved product policy.
@@ -88,7 +88,18 @@ Authoritative domain responsibilities:
 - idempotency;
 - correction semantics.
 
-## 6. Key unresolved decisions
+## 6. Accepted transaction decisions
+
+1. Operation Command is the transaction boundary.
+2. Command is separate from the persisted immutable Financial Operation.
+3. Transaction lifecycle is internal; external contracts expose accepted/rejected outcomes rather than requiring clients to manage internal states.
+4. Idempotency applies to balance-changing commands that may be retried.
+5. Validation precedes effect derivation/validation and atomic commit.
+6. Correction/Reversal uses dedicated commands and creates new Operations/Effects.
+7. effective_at and recorded_at are retained.
+8. Accepted results are explanation-ready, not merely an operation identifier.
+
+## 7. Key unresolved decisions
 
 DG-004 must not finalize until these are explicitly decided:
 
@@ -103,7 +114,7 @@ DG-004 must not finalize until these are explicitly decided:
 - correction/reversal representation;
 - whether pending/unconfirmed proposals have any financial effect (candidate: no).
 
-## 7. Alternatives for the core representation
+## 8. Alternatives for the core representation
 
 ### A — Transaction-centric
 Transaction is the primary aggregate and directly contains its effects.
@@ -125,7 +136,7 @@ Everything is modeled primarily as postings/entries.
 
 **Working recommendation for further design:** investigate B as the candidate, while keeping the user-facing concept understandable as a transaction/financial event. No decision is approved by this document.
 
-## 8. Gate dependency
+## 9. Gate dependency
 
 DG-004 depends on:
 - DG-001 Product Scope
@@ -134,7 +145,7 @@ DG-004 depends on:
 
 DG-005 Balance Model depends on sufficiently resolved transaction/effect semantics.
 
-## 9. Definition of Done
+## 10. Definition of Done
 
 - Accepted transaction vocabulary is documented.
 - Evidence/proposal/authoritative-state boundary is explicit.
@@ -143,8 +154,9 @@ DG-005 Balance Model depends on sufficiently resolved transaction/effect semanti
 - Model supports the approved MVP without blocking the product strategy.
 - Every rule has an identified verification path.
 
-## Decision record
+## 11. Decision record
 
-**Decision:** Open
+**Decision:** Accepted
 **Decision owner:** Khaled
-**Approval:** Not granted by this document.
+**Approval date:** 2026-09-20
+**Approval:** Product Owner approved the eight transaction-model recommendations listed above. Remaining future architecture details stay bounded to downstream gates.
