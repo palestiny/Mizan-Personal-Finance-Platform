@@ -6,6 +6,7 @@ public interface IFinanceRepository
 {
     Task<Account> AddAccountAsync(Account account, CancellationToken cancellationToken);
     Task<Account?> GetAccountAsync(Guid accountId, CancellationToken cancellationToken);
+    Task UpdateAccountAsync(Account account, CancellationToken cancellationToken);
     Task<FinancialOperation?> GetOperationAsync(Guid operationId, CancellationToken cancellationToken);
     Task<FinancialOperation?> GetOperationByIdempotencyKeyAsync(string idempotencyKey, CancellationToken cancellationToken);
     Task<FinancialOperation?> GetReversalByOriginalOperationIdAsync(Guid originalOperationId, CancellationToken cancellationToken);

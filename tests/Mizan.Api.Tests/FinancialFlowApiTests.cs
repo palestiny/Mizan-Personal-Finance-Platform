@@ -90,6 +90,66 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
+    public async Task Api_should_close_and_reopen_account()
+    {
+        var account = await CreateAccountAsync("Lifecycle Cash");
+
+        var close = await _client.PostAsync($"/api/accounts/{account.Id}/close", null);
+        close.StatusCode.Should().Be(HttpStatusCode.OK);
+        var closed = await close.Content.ReadFromJsonAsync<AccountLifecycleResponse>();
+        closed!.Status.Should().Be("Closed");
+
+        var reopen = await _client.PostAsync($"/api/accounts/{account.Id}/reopen", null);
+        reopen.StatusCode.Should().Be(HttpStatusCode.OK);
+        var active = await reopen.Content.ReadFromJsonAsync<AccountLifecycleResponse>();
+        active!.Status.Should().Be("Active");
+    }
+
+    [Fact]
+    public async Task Api_should_reject_normal_operations_on_closed_account_but_keep_balance_readable()
+    {
+        var account = await CreateAccountAsync("Closed Cash", 1000);
+        var close = await _client.PostAsync($"/api/accounts/{account.Id}/close", null);
+        close.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var income = await _client.PostAsJsonAsync("/api/operations/income", new
+        {
+            accountId = account.Id, amountMinorUnits = 500, currency = "EGP",
+            effectiveAt = "2026-09-21T10:00:00+03:00", idempotencyKey = "closed-income-1"
+        });
+        income.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(1000);
+        balance.Status.Should().Be("Closed");
+    }
+
+    [Fact]
+    public async Task Api_should_allow_reversal_after_account_is_closed()
+    {
+        var account = await CreateAccountAsync("Closed Reversal", 1000);
+        var income = await _client.PostAsJsonAsync("/api/operations/income", new
+        {
+            accountId = account.Id, amountMinorUnits = 500, currency = "EGP",
+            effectiveAt = "2026-09-21T10:00:00+03:00", idempotencyKey = "closed-reversal-original"
+        });
+        var original = await income.Content.ReadFromJsonAsync<OperationResponse>();
+
+        (await _client.PostAsync($"/api/accounts/{account.Id}/close", null)).StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var reversal = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = original!.Id,
+            effectiveAt = "2026-09-21T11:00:00+03:00",
+            idempotencyKey = "closed-reversal-command"
+        });
+
+        reversal.StatusCode.Should().Be(HttpStatusCode.OK);
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(1000);
+    }
+
+    [Fact]
     public async Task Api_should_reverse_an_accepted_operation_without_mutating_the_original()
     {
         var account = await CreateAccountAsync("Reversal Cash", 1000);
@@ -146,7 +206,8 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     }
 
     private sealed record AccountResponse(Guid Id);
-    private sealed record BalanceResponse(long AmountMinorUnits);
+    private sealed record AccountLifecycleResponse(Guid Id, string Status);
+    private sealed record BalanceResponse(long AmountMinorUnits, string Status);
     private sealed record OperationResponse(Guid Id, string Type, Guid? OriginalOperationId, IReadOnlyList<EffectResponse> Effects);
     private sealed record EffectResponse(Guid Id, Guid AccountId, long AmountMinorUnits, string Currency, string Direction, long Order);
 }

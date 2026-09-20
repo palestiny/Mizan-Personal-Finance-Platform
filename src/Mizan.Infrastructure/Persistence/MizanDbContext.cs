@@ -18,6 +18,7 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.Property(x => x.Name).HasMaxLength(200).IsRequired();
             e.Property(x => x.Currency).HasMaxLength(3).IsRequired();
             e.Property(x => x.OpeningBalanceMinorUnits).IsRequired();
+            e.Property(x => x.Status).IsRequired();
             e.HasIndex(x => new { x.Name, x.Currency });
         });
 
@@ -30,7 +31,7 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.Property(x => x.RecordedAt).IsRequired();
             e.Property(x => x.OriginalOperationId);
             e.HasOne<OperationRecord>().WithMany().HasForeignKey(x => x.OriginalOperationId).OnDelete(DeleteBehavior.Restrict);
-            e.HasIndex(x => x.OriginalOperationId).IsUnique().HasFilter("\"original_operation_id\" IS NOT NULL");
+            e.HasIndex(x => x.OriginalOperationId).IsUnique().HasFilter("\"OriginalOperationId\" IS NOT NULL");
         });
 
         modelBuilder.Entity<EffectRecord>(e =>
@@ -63,6 +64,7 @@ public sealed class AccountRecord
     public int Type { get; set; }
     public string Currency { get; set; } = "";
     public long OpeningBalanceMinorUnits { get; set; }
+    public int Status { get; set; }
 }
 
 public sealed class OperationRecord

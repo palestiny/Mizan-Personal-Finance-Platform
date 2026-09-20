@@ -46,7 +46,19 @@ app.MapPost("/api/accounts", async (CreateAccountRequest request, FinanceService
         request.Name, request.Type, request.Currency,
         request.OpeningBalanceMinorUnits is null ? null : Money.FromMinorUnits(request.OpeningBalanceMinorUnits.Value, request.Currency),
         ct);
-    return Results.Created($"/api/accounts/{account.Id}", new { account.Id, account.Name, account.Type, account.Currency });
+    return Results.Created($"/api/accounts/{account.Id}", new { account.Id, account.Name, account.Type, account.Currency, account.Status });
+});
+
+app.MapPost("/api/accounts/{accountId:guid}/close", async (Guid accountId, FinanceService service, CancellationToken ct) =>
+{
+    var account = await service.CloseAccountAsync(new CloseAccountCommand(accountId), ct);
+    return Results.Ok(new { account.Id, account.Name, account.Type, account.Currency, account.Status });
+});
+
+app.MapPost("/api/accounts/{accountId:guid}/reopen", async (Guid accountId, FinanceService service, CancellationToken ct) =>
+{
+    var account = await service.ReopenAccountAsync(new ReopenAccountCommand(accountId), ct);
+    return Results.Ok(new { account.Id, account.Name, account.Type, account.Currency, account.Status });
 });
 
 app.MapPost("/api/operations/income", async (AcceptIncomeRequest request, FinanceService service, CancellationToken ct) =>
@@ -87,7 +99,7 @@ app.MapGet("/api/accounts/{accountId:guid}/balance", async (Guid accountId, IFin
 
     var effects = await repository.GetEffectsAsync(accountId, ct);
     var balance = Balance.Derive(account, effects);
-    return Results.Ok(new { accountId, currency = balance.Currency, AmountMinorUnits = balance.MinorUnits });
+    return Results.Ok(new { accountId, status = account.Status, currency = balance.Currency, AmountMinorUnits = balance.MinorUnits });
 });
 
 app.MapGet("/api/accounts/{accountId:guid}/history", async (Guid accountId, IFinanceRepository repository, CancellationToken ct) =>

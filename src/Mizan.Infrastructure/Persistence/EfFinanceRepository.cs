@@ -12,7 +12,7 @@ public sealed class EfFinanceRepository : IFinanceRepository
 
     public EfFinanceRepository(MizanDbContext db) => _db = db;
 
-    public async Task<Account> AddAccountAsync(Account account, CancellationToken cancellationToken)
+    public Task<Account> AddAccountAsync(Account account, CancellationToken cancellationToken)
     {
         _db.Accounts.Add(new AccountRecord
         {
@@ -20,15 +20,16 @@ public sealed class EfFinanceRepository : IFinanceRepository
             Name = account.Name,
             Type = (int)account.Type,
             Currency = account.Currency,
-            OpeningBalanceMinorUnits = account.OpeningBalance.MinorUnits
+            OpeningBalanceMinorUnits = account.OpeningBalance.MinorUnits,
+            Status = (int)account.Status
         });
-        return account;
+        return Task.FromResult(account);
     }
 
     public async Task<Account?> GetAccountAsync(Guid accountId, CancellationToken cancellationToken)
     {
         var r = await _db.Accounts.AsNoTracking().SingleOrDefaultAsync(x => x.Id == accountId, cancellationToken);
-        return r is null ? null : Account.Rehydrate(r.Id, r.Name, (AccountType)r.Type, r.Currency, Money.FromMinorUnits(r.OpeningBalanceMinorUnits, r.Currency));
+        return r is null ? null : Account.Rehydrate(r.Id, r.Name, (AccountType)r.Type, r.Currency, Money.FromMinorUnits(r.OpeningBalanceMinorUnits, r.Currency), (AccountStatus)r.Status);
     }
 
     public async Task<FinancialOperation?> GetOperationAsync(Guid operationId, CancellationToken cancellationToken)
@@ -102,16 +103,14 @@ public sealed class EfFinanceRepository : IFinanceRepository
         if (_transaction is not null) await _transaction.RollbackAsync(cancellationToken);
     }
 
-    private static FinancialOperation Rehydrate(OperationRecord op, IReadOnlyList<EffectRecord> effects, Guid? originalOperationId)
+    public async Task UpdateAccountAsync(Account account, CancellationToken cancellationToken)
     {
-        return FinancialOperation.Rehydrate(
-            op.Id,
-            (FinancialOperationType)op.Type,
-            op.EffectiveAt,
-            op.RecordedAt,
-            effects.Select(ToDomain).ToArray(),
-            originalOperationId);
+        var row = await _db.Accounts.SingleAsync(x => x.Id == account.Id, cancellationToken);
+        row.Status = (int)account.Status;
     }
+
+    private static FinancialOperation Rehydrate(OperationRecord op, IReadOnlyList<EffectRecord> effects, Guid? originalOperationId) =>
+        FinancialOperation.Rehydrate(op.Id, (FinancialOperationType)op.Type, op.EffectiveAt, op.RecordedAt, effects.Select(ToDomain).ToArray(), originalOperationId);
 
     private static FinancialEffect ToDomain(EffectRecord row) =>
         FinancialEffect.Rehydrate(row.Id, row.OperationId, row.AccountId, Money.FromMinorUnits(row.AmountMinorUnits, row.Currency),
