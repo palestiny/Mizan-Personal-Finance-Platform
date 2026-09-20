@@ -186,3 +186,15 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Accepted semantics:** Reversal is a first-class immutable Operation referencing `OriginalOperationId`; it produces exact inverse Effects; the original Operation/Effects remain immutable; Reversal cannot target another Reversal; an accepted Operation can have at most one Reversal; retries use the existing idempotency contract; a second reversal attempt is rejected.
 - **Future correction boundary:** A user-facing correction workflow may be composed from Reversal + Replacement Operation. No separate Correction primitive is introduced at this stage.
 - **Next:** RED tests for the accepted reversal contract before production implementation.
+
+
+## CP-012 — M2 Correction/Reversal Design Gate
+- **Status:** Completed and runtime-verified
+- **Date:** 2026-09-21
+- **Phase:** M2 — Trustworthy Financial Core
+- **Gate:** M2 correction/reversal semantics
+- **Product Owner decision:** Option A — Explicit Reversal Operation.
+- **Implemented:** first-class immutable Reversal linked by `OriginalOperationId`; exact inverse Effects; original Operation/Effects remain immutable; Reversal cannot target another Reversal; one Reversal per original enforced by persistence uniqueness; idempotent retry and conflicting-key behavior; API path and PostgreSQL migration.
+- **Verification:** GitHub Actions run #127 completed successfully. Build, migration application, Domain tests, Application tests, API income/idempotency/concurrency/balance/reversal scenarios all GREEN.
+- **Root-cause fixes during implementation:** EF migration metadata/designer was initially missing, causing the new migration not to be discovered; this was corrected. Duplicate test command models were also removed.
+- **Next:** Continue M2 only when the next capability requires a concrete design gate. No separate Correction primitive is introduced.
