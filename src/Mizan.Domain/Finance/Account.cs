@@ -24,6 +24,9 @@ public sealed class Account
     public string Currency { get; }
     public Money OpeningBalance { get; }
 
+    public static Account Rehydrate(Guid id, string name, AccountType type, string currency, Money openingBalance) =>
+        new(id, name, type, currency.Trim().ToUpperInvariant(), openingBalance);
+
     public static Account Create(string name, AccountType type, string currency, Money? openingBalance = null)
     {
         if (string.IsNullOrWhiteSpace(name))
