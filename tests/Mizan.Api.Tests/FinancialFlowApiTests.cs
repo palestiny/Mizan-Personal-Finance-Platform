@@ -298,5 +298,7 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     private sealed record AccountLifecycleResponse(Guid Id, string Status);
     private sealed record BalanceResponse(long AmountMinorUnits, string Status);
     private sealed record OperationResponse(Guid Id, string Type, Guid? OriginalOperationId, IReadOnlyList<EffectResponse> Effects, IReadOnlyList<RecoverableEffectResponse> RecoverableEffects);
-    private sealed record EffectResponse(Guid Id, Guid AccountId, long AmountMinorUnits, string Currency, string Direction, long Order);\n    private sealed record RecoverableEffectResponse(Guid Id, Guid RecoverableId, long AmountMinorUnits, string Currency, string Direction, string? CounterpartyName, long Order);\n    private sealed record RecoverableResponse(Guid RecoverableId, string? CounterpartyName, string Currency, long OutstandingMinorUnits, string Status, IReadOnlyList<RecoverableEffectResponse> Effects);
+    private sealed record EffectResponse(Guid Id, Guid AccountId, long AmountMinorUnits, string Currency, string Direction, long Order);
+    private sealed record RecoverableEffectResponse(Guid Id, Guid RecoverableId, long AmountMinorUnits, string Currency, string Direction, string? CounterpartyName, long Order);
+    private sealed record RecoverableResponse(Guid RecoverableId, string? CounterpartyName, string Currency, long OutstandingMinorUnits, string Status, IReadOnlyList<RecoverableEffectResponse> Effects);
 }
