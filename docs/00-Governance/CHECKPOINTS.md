@@ -200,3 +200,15 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Verification:** GitHub Actions run #130 completed successfully on the corrected implementation. Build, EF migration application against PostgreSQL, Domain tests, Application tests, existing API financial/idempotency/reversal coverage, and all three Account Lifecycle API scenarios are GREEN.
 - **Root-cause fix before GREEN:** corrected the malformed PostgreSQL reversal-index filter string that caused CI run #129 to fail at compile time. The corrected commit was then verified by run #130.
 - **Merge:** PR #14 was squash-merged into `main` at commit `58405ea502a8ebd30b91481700c7957c14c105c9`.
+
+
+## CP-014 — M2 Recoverables / Reimbursements
+- **Status:** Completed and runtime-verified
+- **Date:** 2026-09-21
+- **Phase:** M2 — Trustworthy Financial Core
+- **Gate:** DG-015 Recoverables / Reimbursements
+- **Product Owner decision:** Recoverables are authoritative, rebuildable financial state represented by immutable Recoverable Effects; no first-class Person/Contact entity yet; partial settlement is supported; waiver/write-off deferred; reversal remains the correction mechanism.
+- **Implemented:** Recoverable Expense, Recoverable Settlement, partial/full settlement, recoverable balance query, explicit currency matching, PostgreSQL persistence, API/domain/application tests, and concurrency-safe settlement handling.
+- **Verification:** GitHub Actions run #140 completed successfully. Build, PostgreSQL migration application, Domain, Application, existing financial/idempotency/concurrency/balance/reversal tests, Account Lifecycle scenarios, and all Recoverables scenarios are GREEN.
+- **Root-cause hardening:** settlement concurrency was reviewed after the initial GREEN slice; recoverable settlement now uses Serializable transaction isolation with retry handling, and the final CI run verified the resulting implementation.
+- **Merge:** PR #15 was squash-merged into `main` at commit `154ac443bd666130881011162d7fe3cb25b4f7c6`.
