@@ -16,6 +16,26 @@ public sealed class FinanceService
         return account;
     }
 
+    public async Task<Account> CloseAccountAsync(CloseAccountCommand command, CancellationToken cancellationToken)
+    {
+        var account = await _repository.GetAccountAsync(command.AccountId, cancellationToken)
+            ?? throw new DomainValidationException("Account was not found.");
+        account.Close();
+        await _repository.UpdateAccountAsync(account, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+        return account;
+    }
+
+    public async Task<Account> ReopenAccountAsync(ReopenAccountCommand command, CancellationToken cancellationToken)
+    {
+        var account = await _repository.GetAccountAsync(command.AccountId, cancellationToken)
+            ?? throw new DomainValidationException("Account was not found.");
+        account.Reopen();
+        await _repository.UpdateAccountAsync(account, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+        return account;
+    }
+
     public async Task<FinancialOperation> AcceptAsync(FinancialOperation.OperationBuilder builder, string idempotencyKey, CancellationToken cancellationToken)
     {
         if (string.IsNullOrWhiteSpace(idempotencyKey))
@@ -23,6 +43,8 @@ public sealed class FinanceService
 
         var existing = await _repository.GetOperationByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
         var operation = builder.Accept();
+
+        await ValidateActiveAccountsAsync(operation, cancellationToken);
 
         if (existing is not null)
         {
@@ -115,6 +137,18 @@ public sealed class FinanceService
 
     public async Task<IReadOnlyList<FinancialEffect>> GetEffectsAsync(Guid accountId, CancellationToken cancellationToken) =>
         await _repository.GetEffectsAsync(accountId, cancellationToken);
+
+    private async Task ValidateActiveAccountsAsync(FinancialOperation operation, CancellationToken cancellationToken)
+    {
+        foreach (var accountId in operation.Effects.Select(x => x.AccountId).Distinct())
+        {
+            var account = await _repository.GetAccountAsync(accountId, cancellationToken)
+                ?? throw new DomainValidationException("Account was not found.");
+
+            if (account.Status != AccountStatus.Active)
+                throw new DomainValidationException("Financial operations are not allowed on a closed account.");
+        }
+    }
 
     private static DateTimeOffset Parse(string value) =>
         DateTimeOffset.Parse(value, System.Globalization.CultureInfo.InvariantCulture);
