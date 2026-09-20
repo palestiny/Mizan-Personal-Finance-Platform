@@ -107,3 +107,11 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 
 ### Next checkpoint
 **CP-005 — Balance Model Decision Gate (DG-005)**
+
+
+## CP-005 — DG-005 Balance Model Accepted
+- **Date:** 2026-09-20
+- **State:** Completed
+- **Gate:** DG-005 Balance Model
+- **Accepted:** authoritative Effects are the source of truth; balance is derived; explicit Effect direction with absolute Money; immutable opening state; deterministic point-in-time ordering; materialized balance is derived only; negative balances allowed by default at Account level; global balance is derived; explanation is backed by authoritative state.
+- **Next:** Thin vertical slice / implementation design gates as required.
