@@ -9,12 +9,9 @@ public sealed class OperationTests
     public void Income_should_create_one_positive_effect_on_receiving_account()
     {
         var account = Account.Create("Cash", AccountType.Cash, "EGP");
-        var command = FinancialOperation.Income(
-            account.Id,
-            Money.FromMinorUnits(100_00, "EGP"),
-            DateTimeOffset.Parse("2026-09-20T10:00:00+03:00"));
-
-        var operation = command.Accept();
+        var operation = FinancialOperation.Income(
+            account.Id, Money.FromMinorUnits(100_00, "EGP"),
+            DateTimeOffset.Parse("2026-09-20T10:00:00+03:00")).Accept();
 
         operation.Effects.Should().ContainSingle();
         operation.Effects.Single().AccountId.Should().Be(account.Id);
@@ -27,8 +24,7 @@ public sealed class OperationTests
     {
         var account = Account.Create("Wallet", AccountType.Wallet, "EGP");
         var operation = FinancialOperation.PersonalExpense(
-            account.Id,
-            Money.FromMinorUnits(25_50, "EGP"),
+            account.Id, Money.FromMinorUnits(25_50, "EGP"),
             DateTimeOffset.Parse("2026-09-20T11:00:00+03:00")).Accept();
 
         operation.Effects.Should().ContainSingle();
@@ -42,9 +38,7 @@ public sealed class OperationTests
         var destination = Account.Create("Bank", AccountType.Bank, "EGP");
 
         var operation = FinancialOperation.OwnedAccountTransfer(
-            source.Id,
-            destination.Id,
-            Money.FromMinorUnits(500_00, "EGP"),
+            source.Id, destination.Id, Money.FromMinorUnits(500_00, "EGP"),
             DateTimeOffset.Parse("2026-09-20T12:00:00+03:00")).Accept();
 
         operation.Effects.Should().HaveCount(2);
@@ -60,9 +54,7 @@ public sealed class OperationTests
         var account = Account.Create("Cash", AccountType.Cash, "EGP");
 
         var action = () => FinancialOperation.OwnedAccountTransfer(
-            account.Id,
-            account.Id,
-            Money.FromMinorUnits(100_00, "EGP"),
+            account.Id, account.Id, Money.FromMinorUnits(100_00, "EGP"),
             DateTimeOffset.UtcNow).Accept();
 
         action.Should().Throw<DomainValidationException>();
