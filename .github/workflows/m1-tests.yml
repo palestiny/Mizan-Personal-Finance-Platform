@@ -34,7 +34,9 @@ jobs:
         run: dotnet restore Mizan.sln
       - name: Install EF Core CLI
         run: dotnet tool install --global dotnet-ef --version 8.0.20
+      - name: Build
+        run: dotnet build Mizan.sln --configuration Release --no-restore
       - name: Apply committed EF Core migrations
-        run: dotnet ef database update --project src/Mizan.Infrastructure --startup-project src/Mizan.Api
+        run: dotnet ef database update --project src/Mizan.Infrastructure --startup-project src/Mizan.Api --configuration Release --no-build
       - name: Test
-        run: dotnet test Mizan.sln --configuration Release --no-restore
+        run: dotnet test Mizan.sln --configuration Release --no-restore --no-build
