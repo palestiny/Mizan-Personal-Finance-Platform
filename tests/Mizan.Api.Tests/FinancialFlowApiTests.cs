@@ -46,7 +46,58 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
         balance!.AmountMinorUnits.Should().Be(15000);
     }
 
+    [Fact]
+    public async Task Api_should_reverse_an_accepted_operation_without_mutating_the_original()
+    {
+        var createAccount = await _client.PostAsJsonAsync("/api/accounts", new { name = "Reversal Cash", type = "Cash", currency = "EGP", openingBalanceMinorUnits = 1000 });
+        var account = await createAccount.Content.ReadFromJsonAsync<AccountResponse>();
+
+        var income = await _client.PostAsJsonAsync("/api/operations/income", new
+        {
+            accountId = account!.Id,
+            amountMinorUnits = 500,
+            currency = "EGP",
+            effectiveAt = "2026-09-20T10:00:00+03:00",
+            idempotencyKey = "reversal-original-1"
+        });
+        var original = await income.Content.ReadFromJsonAsync<OperationResponse>();
+
+        var reversal = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = original!.Id,
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "reversal-command-1"
+        });
+        reversal.StatusCode.Should().Be(HttpStatusCode.OK);
+        var reversed = await reversal.Content.ReadFromJsonAsync<OperationResponse>();
+
+        reversed!.Type.Should().Be("Reversal");
+        reversed.OriginalOperationId.Should().Be(original.Id);
+        reversed.Effects.Should().ContainSingle();
+
+        var duplicate = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = original.Id,
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "reversal-command-1"
+        });
+        duplicate.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await duplicate.Content.ReadFromJsonAsync<OperationResponse>())!.Id.Should().Be(reversed.Id);
+
+        var second = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = original.Id,
+            effectiveAt = "2026-09-22T10:00:00+03:00",
+            idempotencyKey = "reversal-command-2"
+        });
+        second.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(1000);
+    }
+
     private sealed record AccountResponse(Guid Id);
     private sealed record BalanceResponse(long AmountMinorUnits);
-    private sealed record OperationResponse(Guid Id);
+    private sealed record OperationResponse(Guid Id, string Type, Guid? OriginalOperationId, IReadOnlyList<EffectResponse> Effects);
+    private sealed record EffectResponse(Guid Id, Guid AccountId, long AmountMinorUnits, string Currency, string Direction, long Order);
 }
