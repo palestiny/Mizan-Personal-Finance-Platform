@@ -39,6 +39,39 @@ The following should not be assumed into the initial scope:
 
 These can be revisited after the personal-finance core is validated.
 
+
+## 2A. Global product direction
+
+Mizan may be initiated from Egypt and initially used personally by the Product Owner, but it is **not a country-, language-, culture-, or user-specific product**.
+
+The personal starting point is a validation context, not a product boundary. The product foundation must avoid hard-coding Egyptian-only assumptions, a single language, a single market, provider-specific financial behavior, or workflows that only make sense for one person's habits.
+
+The long-term product objective is to become a broadly applicable financial product that can serve people in different countries, languages, currencies, financial institutions, and personal circumstances. Localization, internationalization, and market-specific capabilities should be extensible concerns rather than reasons to duplicate or fork the core financial domain.
+
+Mizan should also be designed as a real service/product that can address validated customer needs, close meaningful market gaps, and support sustainable revenue. Revenue mechanisms are a product/business concern and must not compromise financial correctness, user ownership of data, privacy, or the integrity of the financial source of truth.
+
+## 2B. Input and evidence flexibility
+
+A financial event may arrive through multiple forms. The domain must not be designed around manual form entry as the only source:
+
+- structured manual entry
+- receipt/image evidence
+- voice input
+- bank notification/message
+- later integrations or other machine-readable sources
+
+These are **input/evidence channels**, not separate financial truths. They should normalize into explicit domain operations subject to the same validation and financial invariants.
+
+The product must support cases where a payment is not economically equivalent to a personal expense. Examples include paying for another person, pass-through payments, reimbursements, advances, shared expenses, or money that should be tracked for context without changing the user's net financial position.
+
+The exact treatment of these cases is intentionally deferred to the transaction/domain gates. The design must be capable of representing at least the distinction between:
+
+1. a real personal financial effect;
+2. a financial movement with a recoverable/offsetting claim or expected reimbursement;
+3. a recorded event that has informational/evidence value but should not affect the user's financial balance.
+
+This is a domain extensibility requirement, not a request to hard-code one person's workflow.
+
 ## 3. Proposed core user outcomes
 
 The initial product should enable a user to:
