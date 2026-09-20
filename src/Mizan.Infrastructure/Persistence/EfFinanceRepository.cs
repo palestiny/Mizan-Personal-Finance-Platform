@@ -40,12 +40,7 @@ public sealed class EfFinanceRepository : IFinanceRepository
             .Where(x => x.OperationId == op.Id)
             .OrderBy(x => x.Order)
             .ToListAsync(cancellationToken);
-        var reversal = await _db.Operations.AsNoTracking()
-            .Where(x => x.OriginalOperationId == op.Id)
-            .Select(x => (Guid?)x.Id)
-            .SingleOrDefaultAsync(cancellationToken);
-
-        return Rehydrate(op, effects, reversal);
+        return Rehydrate(op, effects, op.OriginalOperationId);
     }
 
     public async Task<FinancialOperation?> GetReversalByOriginalOperationIdAsync(Guid originalOperationId, CancellationToken cancellationToken)
