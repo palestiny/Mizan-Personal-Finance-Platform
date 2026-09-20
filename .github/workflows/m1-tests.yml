@@ -42,5 +42,9 @@ jobs:
         run: dotnet build Mizan.sln --configuration Release --no-restore
       - name: Apply committed EF Core migrations
         run: dotnet ef database update --project src/Mizan.Infrastructure --startup-project src/Mizan.Api --configuration Release --no-build
-      - name: Test
-        run: dotnet test Mizan.sln --configuration Release --no-restore --no-build
+      - name: Test — Domain
+        run: dotnet test tests/Mizan.Domain.Tests/Mizan.Domain.Tests.csproj --configuration Release --no-restore --no-build
+      - name: Test — Application
+        run: dotnet test tests/Mizan.Application.Tests/Mizan.Application.Tests.csproj --configuration Release --no-restore --no-build
+      - name: Test — API
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build
