@@ -1,0 +1,60 @@
+name: M1 Tests
+
+on:
+  pull_request:
+    branches:
+      - main
+  workflow_dispatch:
+
+concurrency:
+  group: m1-tests-${{ github.workflow }}-${{ github.event.pull_request.number || github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: mizan
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres -d mizan"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    env:
+      ConnectionStrings__Mizan: Host=localhost;Database=mizan;Username=postgres;Password=postgres
+      ASPNETCORE_ENVIRONMENT: Testing
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore
+        run: dotnet restore Mizan.sln
+      - name: Install EF Core CLI
+        run: dotnet tool install --global dotnet-ef --version 8.0.20
+      - name: Build
+        run: dotnet build Mizan.sln --configuration Release --no-restore
+      - name: Apply committed EF Core migrations
+        run: dotnet ef database update --project src/Mizan.Infrastructure --startup-project src/Mizan.Api --configuration Release --no-build
+      - name: Test — Domain
+        run: dotnet test tests/Mizan.Domain.Tests/Mizan.Domain.Tests.csproj --configuration Release --no-restore --no-build
+      - name: Test — Application
+        run: dotnet test tests/Mizan.Application.Tests/Mizan.Application.Tests.csproj --configuration Release --no-restore --no-build
+      - name: Test — API — Income
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_accept_income"
+      - name: Test — API — Retry
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_return_same_operation_for_idempotent_retry"
+      - name: Test — API — Conflict
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_reject_different_command_under_same_idempotency_key"
+      - name: Test — API — Concurrent Duplicate
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_protect_concurrent_duplicate_income"
+      - name: Test — API — Balance
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_derive_balance_after_income_and_concurrent_retry"
+      - name: Test — API — Reversal
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_reverse_an_accepted_operation_without_mutating_the_original"
