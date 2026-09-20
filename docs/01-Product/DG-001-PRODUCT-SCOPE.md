@@ -1,288 +1,158 @@
 # DG-001 — Product Scope Decision Gate
 
 ## Status
-
-**State:** Proposed — awaiting Product Owner decision  
+**State:** Proposed — product direction expanded; scope decisions still require explicit Product Owner acceptance.
 **Phase:** M0 — Product & Domain Foundation
 
-This document converts the current product direction into a decision-ready scope proposal. It does not silently approve the scope.
+## Product intent
+Mizan is intended to become a **Personal Financial Operating System**, not merely an expense-entry application.
 
-## 1. Product intent
+Its product progression is:
+**Capture → Understand → Explain → Predict → Recommend → Act**
 
-Mizan is intended to be a personal financial system, not merely an expense-entry application.
+Authoritative financial records and explicit business rules remain the financial source of truth. AI, UI state, caches, and inferred insights must not become financial truth.
 
-Its core responsibility is to represent a user's financial state and its history accurately enough that the user can rely on the system when answering questions such as:
+## Global product direction
+Mizan may start from Egypt and initially be used personally, but this is a validation context, not a product boundary.
 
-- What money do I currently have?
-- Where is that money held?
-- What money came in?
-- What money went out?
-- When did a financial change happen?
-- What changed the balance of an account?
-- Can I trust the historical record?
+The product must not be customized around one country, language, culture, provider, person's habits, input method, or future workflow.
 
-The system's financial truth must come from authoritative financial records and explicit business rules. AI, UI state, cached values, and inferred insights must not become the source of financial truth.
+The long-term target is a globally applicable product supporting different countries, languages, currencies, institutions, circumstances, and financial workflows through extensible localization and integration boundaries.
 
-## 2. Proposed initial target user
+## Commercial ambition
+Mizan is intended to become a real service that solves validated customer problems, closes meaningful market gaps, and generates sustainable recurring revenue.
 
-### Primary
+Recurring value should come from reduced financial administration, effortless capture, trusted visibility, explanations, proactive insights, forecasting, scenarios, personalized intelligence, and controlled automation.
 
-An individual managing their own personal finances.
+Revenue mechanisms must not compromise correctness, privacy, user ownership, portability, auditability, or user control.
 
-### Explicitly unresolved
+See:
+- docs/01-Product/MIZAN-PRODUCT-VISION.md
+- docs/01-Product/MIZAN-PRODUCT-STRATEGY.md
 
-The following should not be assumed into the initial scope:
+## Product problem
+People need more than a place to record expenses. They need a coherent answer to:
 
-- Household/shared finances
-- Multiple users collaborating on one financial space
-- Organizational/business accounting
+**What is happening with my money, what does it mean, and what should I do next?**
 
-These can be revisited after the personal-finance core is validated.
+The product should connect financial evidence, trusted financial state, understanding, prediction, and user-controlled action.
 
+## Input and evidence boundary
+A financial event may arrive through manual entry, receipt/image evidence, voice, bank notifications/messages, imports, future integrations, or other machine-readable sources.
 
-## 2A. Global product direction
+These are input/evidence channels, not separate financial truths.
 
-Mizan may be initiated from Egypt and initially used personally by the Product Owner, but it is **not a country-, language-, culture-, or user-specific product**.
+Future conceptual flow:
+**Evidence/Input → Extraction → Candidate Financial Event → Validation → Confirmation/Policy → Authoritative Financial Record → Intelligence**
 
-The personal starting point is a validation context, not a product boundary. The product foundation must avoid hard-coding Egyptian-only assumptions, a single language, a single market, provider-specific financial behavior, or workflows that only make sense for one person's habits.
+## Economic-effect boundary
+A payment is not automatically a personal expense.
 
-The long-term product objective is to become a broadly applicable financial product that can serve people in different countries, languages, currencies, financial institutions, and personal circumstances. Localization, internationalization, and market-specific capabilities should be extensible concerns rather than reasons to duplicate or fork the core financial domain.
+The product must remain capable of distinguishing:
+1. personal financial effect;
+2. transfer between owned accounts;
+3. payment on behalf of another person;
+4. recoverable amount / expected reimbursement;
+5. reimbursement received;
+6. advance/shared expense;
+7. obligation or expected future payment;
+8. informational/evidence-only event with no balance effect.
 
-Mizan should also be designed as a real service/product that can address validated customer needs, close meaningful market gaps, and support sustainable revenue. Revenue mechanisms are a product/business concern and must not compromise financial correctness, user ownership of data, privacy, or the integrity of the financial source of truth.
+Exact semantics belong to DG-002/DG-004.
 
-## 2B. Input and evidence flexibility
-
-A financial event may arrive through multiple forms. The domain must not be designed around manual form entry as the only source:
-
-- structured manual entry
-- receipt/image evidence
-- voice input
-- bank notification/message
-- later integrations or other machine-readable sources
-
-These are **input/evidence channels**, not separate financial truths. They should normalize into explicit domain operations subject to the same validation and financial invariants.
-
-The product must support cases where a payment is not economically equivalent to a personal expense. Examples include paying for another person, pass-through payments, reimbursements, advances, shared expenses, or money that should be tracked for context without changing the user's net financial position.
-
-The exact treatment of these cases is intentionally deferred to the transaction/domain gates. The design must be capable of representing at least the distinction between:
-
-1. a real personal financial effect;
-2. a financial movement with a recoverable/offsetting claim or expected reimbursement;
-3. a recorded event that has informational/evidence value but should not affect the user's financial balance.
-
-This is a domain extensibility requirement, not a request to hard-code one person's workflow.
-
-## 3. Proposed core user outcomes
-
-The initial product should enable a user to:
-
-1. Establish one or more financial accounts.
-2. Record money received as income.
-3. Record money spent as an expense.
-4. Move money between owned accounts as a transfer.
-5. See the resulting account balances.
-6. Review the financial history that produced those balances.
-7. Correct mistakes using explicit financial-history rules.
-8. Continue using the core financial functions when connectivity is unavailable, if offline-first remains a release requirement.
-9. Understand the financial effect of an operation before committing it.
-
-These are proposed product outcomes, not yet implementation requirements.
-
-## 4. Proposed MVP boundary
-
-### In scope
-
-The MVP should concentrate on the smallest complete financial loop:
-
+## Core product loop
+The minimum trustworthy financial loop remains:
 **Account → Financial Record → Balance → History**
 
-Candidate MVP capabilities:
+The future product loop expands around it:
+**Capture → Financial Truth → Understanding → Intelligence → Action**
 
-- Account creation and management
-- Income recording
-- Expense recording
-- Transfer recording
-- Balance viewing
-- Transaction/history viewing
-- Basic categorization if it proves necessary for the core workflows
-- Financial record correction according to approved rules
-- Local persistence
-- Reliable recovery from ordinary application failures
-- Security/privacy controls required for the selected release model
+The first loop must be trustworthy before the second can safely become authoritative.
 
-### Deliberately not required to close DG-001
+## Proposed MVP boundary
+The MVP should establish the smallest complete and trustworthy financial core:
+- account creation/management;
+- income;
+- expense;
+- transfers;
+- balances;
+- history;
+- correction rules;
+- local persistence/recovery;
+- required security/privacy;
+- foundations that do not block future evidence and AI capabilities.
 
-The following should remain separate decisions rather than being smuggled into the MVP:
+Advanced AI, forecasting, automation, bank connectivity, household collaboration, investment management, and professional variants remain later capabilities unless evidence or a specific design gate promotes them.
 
-- Advanced budgeting
-- Goals
-- Forecasting
-- AI financial recommendations
-- Autonomous financial actions
-- Bank connectivity
-- Investment portfolio management
-- Social/community features
-- Complex household collaboration
-- Business accounting
+The architecture must not make those capabilities impossible.
 
-A later product decision may promote any of these.
+## Product-wide principles
+- **Trust before intelligence:** incorrect financial truth cannot be repaired by AI.
+- **AI assists; domain validates:** AI may interpret and propose; domain rules validate financial operations.
+- **Evidence is not truth:** receipt, voice transcription, notification, or model output becomes financial truth only through approved domain processing.
+- **Global core, localized edges:** market/provider/language differences should be isolated in extensible boundaries.
+- **User control:** consequential changes and automation require explicit authorization and auditable policy.
+- **Data ownership:** privacy, exportability, and user control are foundational.
+- **Build for the vision, implement for the evidence:** preserve future capability without building the entire future now.
 
-## 5. Product boundary principle
+## Strategic success criteria
+Mizan should eventually demonstrate:
+- materially lower friction for financial capture;
+- accurate representation of complex real-world financial effects;
+- explainable important financial changes;
+- useful measurable AI assistance;
+- recurring value from proactive intelligence;
+- user trust in financial state;
+- willingness among a meaningful user segment to pay for the service.
 
-Mizan's MVP should optimize for **financial correctness and trustworthy daily use**, not for the number of features delivered.
+These are strategic outcomes to validate, not current implementation acceptance criteria.
 
-A feature belongs in the MVP only if one of these is true:
-
-- It is required to complete the core financial loop.
-- It is required to preserve financial correctness.
-- It is required to protect user data.
-- It is required for reliable operation of an approved MVP workflow.
-- Without it, a core user outcome cannot be completed safely.
-
-Otherwise it should remain outside the MVP until evidence justifies inclusion.
-
-## 6. Scope options
-
-### Option A — Expense Tracker First
-
-Focus on expenses, with income and transfers added later.
-
-**Advantages**
-- Smaller initial feature set.
-- Faster path to a visible UI.
-
-**Costs / risks**
-- Establishes the wrong conceptual center if Mizan is intended to represent the user's financial state.
-- Makes account balances and transfers secondary concerns.
-- Risks requiring later domain restructuring.
-
-### Option B — Complete Personal-Finance Core
-
-Start with accounts, income, expenses, transfers, balances, and history as one coherent financial core.
-
-**Advantages**
-- Matches the product direction in the engineering kickoff material.
-- Establishes the financial model before reports and intelligence.
-- Allows balances to be validated against authoritative history from the beginning.
-- Reduces the chance that an expense-only model becomes the accidental domain architecture.
-
-**Costs / risks**
-- Larger foundation than an expense-only prototype.
-- Requires earlier decisions about financial invariants, corrections, transfers, and balance semantics.
-
-### Option C — Ledger-First General Financial Engine
-
-Build a generalized accounting/ledger engine before defining the user-facing personal-finance product.
-
-**Advantages**
-- Potentially powerful and general.
-- Could support more financial domains later.
-
-**Costs / risks**
-- High risk of premature generalization.
-- Increases conceptual and implementation complexity before Mizan's user needs are validated.
-- Can optimize for an accounting abstraction rather than the actual personal-finance product.
-
-## 7. Proposed direction for decision
-
-The evidence currently available from the project reference material supports **Option B as the working proposal** because it matches the stated long-term product direction while remaining bounded around the personal financial core.
-
-This is a recommendation for the Product Owner to accept, modify, or reject. It is not yet an approved decision.
-
-## 8. Decisions still required before DG-001 can close
+## Decisions still required
 
 ### D1 — Initial user boundary
-
-Choose:
-
 - Individual only
-- Individual + household/shared finance
+- Individual + household/shared
 
 ### D2 — MVP financial scope
-
-Choose:
-
 - Expense-only
 - Complete personal-finance core
 - Other explicitly defined boundary
 
 ### D3 — Account scope
-
-Define which account concepts are required initially, for example:
-
-- Cash
-- Bank account
-- Wallet
-- Other user-defined account types
-
-The exact domain representation belongs to DG-002.
+Define initial account concepts without coupling the domain to providers.
 
 ### D4 — Currency scope
-
-Choose whether MVP is:
-
-- Single-currency
+- Single currency
 - Multi-currency
 
-If multi-currency is selected, conversion semantics become a later domain/architecture decision.
-
 ### D5 — Offline requirement
-
-Choose whether offline capability is:
-
-- Mandatory for MVP
+- Mandatory in MVP
 - Required after MVP
 - Not required
 
-This affects DG-006 and downstream architecture.
-
-### D6 — History correction policy
-
-At product level, define whether users can:
-
-- Edit historical records directly
-- Reverse/correct records through compensating operations
-- Use a mixed policy depending on record state
-
-The detailed financial invariant belongs to DG-003/DG-004.
+### D6 — Historical correction policy
+- Direct edit
+- Compensating/reversal
+- Mixed policy
 
 ### D7 — Data portability
-
-Choose whether MVP must provide:
-
 - Export
 - Import + export
 - Neither initially
 
-## 9. Success criteria for DG-001
+### D8 — Product generality
+**Working proposal:** global product from inception; Egypt/personal use is validation context only.
 
-DG-001 is closed only when the repository contains an explicit accepted decision for:
+### D9 — Financial-effect classification
+**Working proposal:** transaction design must distinguish personal effects, transfers, recoverable/reimbursable movements, shared/advance payments, and informational/no-balance events. Exact semantics belong to DG-002/DG-004.
 
-- Target user
-- Product problem
-- Core outcomes
-- MVP scope
-- Account scope at product level
-- Currency scope at product level
-- Offline requirement
-- History/correction product policy
-- Data portability scope
-- Explicit non-goals
-
-The decision must also identify unresolved questions that are intentionally deferred to DG-002 or later gates.
-
-## 10. Gate dependency
-
+## Gate dependency
 DG-001 must be sufficiently resolved before finalizing:
-
 **DG-002 Domain Model → DG-003 Financial Invariants → DG-004 Transaction Model → DG-005 Balance Model**
 
-Technical architecture should not be finalized before these product/domain dependencies are understood.
+AI architecture, integrations, and advanced intelligence must be designed against the trusted financial foundation rather than defining that foundation.
 
-## 11. Decision record
-
-**Decision:** Open  
-**Decision owner:** Khaled  
-**Date:** Not yet decided  
-**Rationale:** Pending Product Owner decision
-
+## Decision record
+**Decision:** Open
+**Decision owner:** Khaled
+**Rationale:** Product vision and strategic direction have been expanded; explicit product decisions remain to be accepted or modified.
