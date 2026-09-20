@@ -2,6 +2,7 @@
 using System;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 using Mizan.Infrastructure.Persistence;
 using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
@@ -11,6 +12,7 @@ using Npgsql.EntityFrameworkCore.PostgreSQL.Metadata;
 namespace Mizan.Infrastructure.Migrations
 {
     [DbContext(typeof(MizanDbContext))]
+    [Migration("20260922000000_AddAccountLifecycle")]
     partial class AddAccountLifecycle
     {
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
