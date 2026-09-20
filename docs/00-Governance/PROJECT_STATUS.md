@@ -5,7 +5,7 @@
 
 ## Current state
 **Status:** In progress  
-**Production implementation:** Not started
+**Production implementation:** M1 thin vertical slice — design accepted, implementation not started
 
 ## Accepted product and strategy gates
 - **DG-001 Product Scope:** Accepted
@@ -14,6 +14,7 @@
 - **DG-003 Financial Invariants:** Accepted
 - **DG-004 Transaction Model:** Accepted
 - **DG-005 Balance Model:** Accepted
+- **M1 Thin Vertical Slice:** Architecture decisions Accepted
 
 The accepted direction is Mizan as a globally applicable Personal Financial Operating System, with Egypt/personal use as the initial validation context. The MVP is a complete personal-finance core, while advanced intelligence and automation remain staged capabilities.
 
@@ -36,7 +37,7 @@ The accepted direction is Mizan as a globally applicable Personal Financial Oper
 Evidence and Proposal are surrounding concepts. Evidence is not financial truth. Proposal is not financial truth. Only accepted Operations create authoritative Effects. Accepted Operations and Effects are immutable. Corrections/Reversals are represented by new Operations and Effects. MVP operation types are Income, PersonalExpense, and OwnedAccountTransfer. MVP account classifications are Cash, Bank, and Wallet. Currency is explicit with a single-currency MVP.
 
 ## Accepted controlled sequence
-**Thin vertical slice → architecture decisions only where the slice requires them → trustworthy core → validated capture → understanding → intelligence → action → expansion**
+**M1 thin vertical slice implementation → trustworthy core → validated capture → understanding → intelligence → action → expansion**
 
 ## Important boundaries
 - No provider-specific financial domain models.
@@ -48,7 +49,7 @@ Evidence and Proposal are surrounding concepts. Evidence is not financial truth.
 - Pricing and packaging remain validation questions.
 
 ## Next action
-Proceed to the **thin vertical slice**. M0 domain foundation gates DG-001, DG-002, DG-003, DG-004, and DG-005 are accepted. No production financial implementation should begin outside the controlled vertical-slice plan.
+Proceed with **RED tests for the M1 thin vertical slice**. M0 domain foundation and M1 architecture decisions are accepted.
 
 ## Verification rule
 A document is not treated as approved merely because it exists. Gate status and decision records must reflect explicit Product Owner acceptance.
