@@ -79,10 +79,15 @@ public sealed class EfFinanceRepository : IFinanceRepository
 
     private static FinancialOperation Rehydrate(OperationRecord op, IReadOnlyList<EffectRecord> effects)
     {
-        throw new NotSupportedException("Operation rehydration will be completed with a persistence-safe factory before read-side idempotency is enabled.");
+        return FinancialOperation.Rehydrate(
+            op.Id,
+            (FinancialOperationType)op.Type,
+            op.EffectiveAt,
+            op.RecordedAt,
+            effects.Select(ToDomain).ToArray());
     }
 
     private static FinancialEffect ToDomain(EffectRecord row) =>
-        new(row.Id, row.OperationId, row.AccountId, Money.FromMinorUnits(row.AmountMinorUnits, row.Currency),
+        FinancialEffect.Rehydrate(row.Id, row.OperationId, row.AccountId, Money.FromMinorUnits(row.AmountMinorUnits, row.Currency),
             (EffectDirection)row.Direction, row.EffectiveAt, row.RecordedAt, row.Order);
 }
