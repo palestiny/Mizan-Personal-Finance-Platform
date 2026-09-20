@@ -15,7 +15,7 @@ var app = builder.Build();
 if (app.Environment.IsEnvironment("Testing"))
 {
     using var scope = app.Services.CreateScope();
-    await scope.ServiceProvider.GetRequiredService<MizanDbContext>().Database.EnsureCreatedAsync();
+    await scope.ServiceProvider.GetRequiredService<MizanDbContext>().Database.MigrateAsync();
 }
 
 app.MapGet("/", () => Results.Ok(new { service = "Mizan", status = "ok" }));
