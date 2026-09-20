@@ -2,7 +2,7 @@
 
 ## Status
 
-**State:** Draft — candidate rules only; depends on DG-001 and DG-002 decisions  
+**State:** Accepted — Product Owner approved 2026-09-20  
 **Phase:** M0 — Product & Domain Foundation
 
 This gate converts the candidate Operation + Effect domain model into explicit, testable financial invariants. It does not approve unresolved product policy.
@@ -130,7 +130,7 @@ The model must distinguish the time an event is financially effective from the t
 
 When multiple effects share or interact around a time boundary, their authoritative ordering must be deterministic and reproducible.
 
-The exact ordering policy is a DG-004/DG-005 decision.
+The authoritative ordering policy is `effective_at`, with `recorded_at` retained for audit/context; deterministic tie-breaking must be defined by the transaction/persistence design.
 
 ## 8. History and correction
 
@@ -172,7 +172,7 @@ Retrying an already accepted operation must not create unintended duplicate effe
 
 The system must define what constitutes the same operation/retry and where the idempotency key is authoritative.
 
-This decision belongs to DG-004/persistence design.
+The idempotency boundary is the accepted financial operation command/identity; retries of the same accepted operation must resolve to the same financial result without creating duplicate effects. Exact storage mechanics remain a DG-004/persistence design concern.
 
 ### I-025 — Deterministic rejection
 
@@ -208,14 +208,14 @@ Rebuilding derived state from authoritative effects produces the same accepted f
 
 ## 13. Additional candidate policy points
 
-- zero-value operation policy;
-- fee/adjustment representation;
-- maximum/allowed number of affected accounts per operation;
-- effective-time vs recording-time ordering;
-- correction/reversal semantics;
-- idempotency key ownership;
-- whether informational/no-effect operations are persisted;
-- concurrency/conflict behavior once multi-device/offline work is introduced.
+- zero-value behavior is policy-driven by operation/effect semantics;
+- fees/adjustments are explicit effects or explicit future operation semantics, never hidden;
+- affected-account limits are not a financial invariant and remain transaction-model policy;
+- `effective_at` and `recorded_at` are distinct, with deterministic ordering defined downstream;
+- correction/reversal is explicit through new Operations/Effects;
+- idempotency belongs to accepted operation identity, with persistence mechanics downstream;
+- informational/no-effect operations are not part of the MVP balance-changing financial truth unless explicitly introduced;
+- concurrency/conflict behavior is a downstream architecture policy for multi-device/offline scenarios.
 
 ## 14. Candidate verification matrix
 
@@ -247,6 +247,7 @@ No production financial implementation should depend on unresolved invariant pol
 
 ## 16. Decision record
 
-**Decision:** Open  
+**Decision:** Accepted  
 **Decision owner:** Khaled  
-**Approval:** Not granted by this document.
+**Approval date:** 2026-09-20  
+**Approval:** Recommendations accepted. The Tier 1 financial invariants are mandatory; Tier 2 domain policies and Tier 3 future architecture policies remain explicitly bounded as described above.
