@@ -521,6 +521,78 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
         balance!.AmountMinorUnits.Should().Be(5000);
     }
 
+
+    [Fact]
+    public async Task Api_should_create_obligation_without_changing_account_balance()
+    {
+        var account = await CreateAccountAsync("Obligation Cash", 5000);
+
+        var created = await _client.PostAsJsonAsync("/api/obligations", new
+        {
+            description = "Rent",
+            amountMinorUnits = 2000,
+            currency = "EGP",
+            dueAt = "2026-10-01T00:00:00+03:00"
+        });
+
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var obligation = await created.Content.ReadFromJsonAsync<ObligationResponse>();
+        obligation!.Status.Should().Be("Planned");
+        obligation.AmountMinorUnits.Should().Be(2000);
+        obligation.Currency.Should().Be("EGP");
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(5000);
+    }
+
+    [Fact]
+    public async Task Api_should_settle_and_cancel_obligations_without_creating_financial_effects()
+    {
+        var settled = await _client.PostAsJsonAsync("/api/obligations", new
+        {
+            description = "Utilities",
+            amountMinorUnits = 700,
+            currency = "EGP",
+            dueAt = "2026-10-05T00:00:00+03:00"
+        });
+        var settledObligation = await settled.Content.ReadFromJsonAsync<ObligationResponse>();
+
+        var settle = await _client.PostAsync($"/api/obligations/{settledObligation!.Id}/settle", null);
+        settle.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await settle.Content.ReadFromJsonAsync<ObligationResponse>())!.Status.Should().Be("Settled");
+
+        var cancelled = await _client.PostAsJsonAsync("/api/obligations", new
+        {
+            description = "Subscription",
+            amountMinorUnits = 300,
+            currency = "EGP",
+            dueAt = "2026-11-01T00:00:00+03:00"
+        });
+        var cancelledObligation = await cancelled.Content.ReadFromJsonAsync<ObligationResponse>();
+
+        var cancel = await _client.PostAsync($"/api/obligations/{cancelledObligation!.Id}/cancel", null);
+        cancel.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await cancel.Content.ReadFromJsonAsync<ObligationResponse>())!.Status.Should().Be("Cancelled");
+    }
+
+    [Fact]
+    public async Task Api_should_reject_duplicate_obligation_lifecycle_transition()
+    {
+        var created = await _client.PostAsJsonAsync("/api/obligations", new
+        {
+            description = "Rent",
+            amountMinorUnits = 2000,
+            currency = "EGP",
+            dueAt = "2026-10-01T00:00:00+03:00"
+        });
+        var obligation = await created.Content.ReadFromJsonAsync<ObligationResponse>();
+
+        (await _client.PostAsync($"/api/obligations/{obligation!.Id}/settle", null)).StatusCode.Should().Be(HttpStatusCode.OK);
+        (await _client.PostAsync($"/api/obligations/{obligation.Id}/settle", null)).StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    private sealed record ObligationResponse(Guid Id, string Description, long AmountMinorUnits, string Currency, DateTimeOffset DueAt, DateTimeOffset CreatedAt, string Status);
+
     private async Task<AccountResponse> CreateAccountAsync(string name, long? openingBalanceMinorUnits = null)
     {
         var response = await _client.PostAsJsonAsync("/api/accounts", new { name, type = "Cash", currency = "EGP", openingBalanceMinorUnits });
