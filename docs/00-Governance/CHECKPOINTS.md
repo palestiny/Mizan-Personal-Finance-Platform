@@ -227,11 +227,12 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 
 
 ## CP-016 — M2 Obligations / Expected Future Payments
-- **Status:** Completed and runtime-verified; merge pending
+- **Status:** Completed, merged, and runtime-verified
 - **Date:** 2026-09-21
 - **Phase:** M2 — Trustworthy Financial Core
 - **Gate:** DG-017 Obligations / Expected Future Payments
 - **Product Owner decision:** First-class Planned / Settled / Cancelled obligation state; planned obligations do not affect authoritative account balances; actual payment remains a separate FinancialOperation; automatic payment linkage and recurring/forecasting machinery are deferred.
 - **Implemented:** Obligation domain model and lifecycle, PostgreSQL persistence/migration, API create/settle/cancel/read endpoints, domain/API tests, and CI coverage.
-- **Verification:** GitHub Actions run #153 completed successfully. Build, committed EF migration application against PostgreSQL, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, Shared Expenses, and all Obligations API scenarios are GREEN.
+- **Verification:** GitHub Actions run #154 completed successfully. Build, committed EF migration application against PostgreSQL, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, Shared Expenses, and all Obligations API scenarios are GREEN.
 - **Pre-merge hardening:** removed a duplicate SaveChangesAsync declaration in IFinanceRepository before accepting the GREEN result.
+- **Merge:** PR #17 was squash-merged into `main` at commit `fe6951da6e010f8b957513e595ede78350b72604`.
