@@ -18,7 +18,6 @@ public interface IFinanceRepository
     Task<Obligation> AddObligationAsync(Obligation obligation, CancellationToken cancellationToken);
     Task UpdateObligationAsync(Obligation obligation, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
-    Task SaveChangesAsync(CancellationToken cancellationToken);
     Task BeginTransactionAsync(CancellationToken cancellationToken, IsolationLevel isolationLevel = IsolationLevel.ReadCommitted);
     Task CommitTransactionAsync(CancellationToken cancellationToken);
     Task RollbackTransactionAsync(CancellationToken cancellationToken);
