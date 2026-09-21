@@ -65,7 +65,7 @@ Reversal of a SharedExpense reverses both:
 - its Account Effect;
 - its Recoverable Effect.
 
-If the recoverable portion has already been partially settled, reversing the SharedExpense directly is rejected because it would create a negative recoverable balance. The settlement reversal must happen first. The original operation remains immutable.
+If the recoverable portion has already been settled in any amount, reversing the SharedExpense directly is rejected because it would create a negative recoverable balance. The settlement reversal must happen first. The original operation remains immutable.
 
 ## Invariants
 - Total account decrease equals the submitted total payment.
