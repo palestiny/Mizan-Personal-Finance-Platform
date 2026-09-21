@@ -212,3 +212,15 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Verification:** GitHub Actions run #140 completed successfully. Build, PostgreSQL migration application, Domain, Application, existing financial/idempotency/concurrency/balance/reversal tests, Account Lifecycle scenarios, and all Recoverables scenarios are GREEN.
 - **Root-cause hardening:** settlement concurrency was reviewed after the initial GREEN slice; recoverable settlement now uses Serializable transaction isolation with retry handling, and the final CI run verified the resulting implementation.
 - **Merge:** PR #15 was squash-merged into `main` at commit `154ac443bd666130881011162d7fe3cb25b4f7c6`.
+
+
+## CP-015 — M2 Shared Expenses / Advances
+- **Status:** Completed and runtime-verified
+- **Date:** 2026-09-21
+- **Phase:** M2 — Trustworthy Financial Core
+- **Gate:** DG-016 Shared Expenses / Advances
+- **Product Owner decision:** Extend the existing Recoverable model; Shared Expense records total account decrease plus recoverable portion; Recoverable Expense remains the fully recoverable advance; no Person/Contact, group-splitting engine, waiver/write-off, or generalized receivables engine.
+- **Implemented:** Shared Expense operation, validation of recoverable portion and currency, API path, immutable Account + Recoverable Effects, idempotent retry semantics, reversal integrity, and concurrency-safe protection against negative recoverable balances.
+- **Verification:** GitHub Actions run #151 completed successfully. Build, PostgreSQL migration application, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, and all Shared Expenses API scenarios are GREEN.
+- **Root-cause hardening:** Shared Expense semantic idempotency was corrected to compare generated recoverable-effect semantics rather than random Recoverable IDs; reversal was hardened with Serializable transaction handling so concurrent settlements cannot race a recoverable reversal into a negative balance.
+- **Merge:** PR #16 was squash-merged into `main` at commit `2cd8f7a2952c984cfef87a259c953a1bfd34100a`.
