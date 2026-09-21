@@ -15,7 +15,7 @@ Mizan's authoritative financial model is **Operation + Effect**. Only accepted i
 | M2 account lifecycle | Implemented, merged, and runtime-verified |
 | M2 recoverables / reimbursements | Implemented, merged, and runtime-verified |
 | M2 shared expenses / advances | Implemented, merged, and runtime-verified |
-| M2 obligations / expected future payments | Implemented, runtime-verified; merge pending |
+| M2 obligations / expected future payments | Implemented, merged, and runtime-verified |
 
 ### M2 Shared Expenses / Advances
 
@@ -58,4 +58,4 @@ Verified in that run:
 
 ## Next action
 
-M2 Obligations is GREEN and ready for merge. After merge, continue M2 by identifying the next concrete capability from the accepted roadmap. Open a new design gate only if the next capability introduces a material product, domain, or architecture decision.
+M2 Obligations is GREEN and merged. Continue M2 by identifying the next concrete capability from the accepted roadmap. Open a new design gate only if the next capability introduces a material product, domain, or architecture decision.
