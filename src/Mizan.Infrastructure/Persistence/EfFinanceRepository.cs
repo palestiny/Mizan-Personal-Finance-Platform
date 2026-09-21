@@ -102,6 +102,29 @@ public sealed class EfFinanceRepository : IFinanceRepository
         return rows.Select(ToDomain).ToArray();
     }
 
+
+    public async Task<Obligation?> GetObligationAsync(Guid obligationId, CancellationToken cancellationToken)
+    {
+        var row = await _db.Obligations.AsNoTracking().SingleOrDefaultAsync(x => x.Id == obligationId, cancellationToken);
+        return row is null ? null : Obligation.Rehydrate(row.Id, row.Description, Money.FromMinorUnits(row.AmountMinorUnits, row.Currency), row.DueAt, row.CreatedAt, (ObligationStatus)row.Status);
+    }
+
+    public Task<Obligation> AddObligationAsync(Obligation obligation, CancellationToken cancellationToken)
+    {
+        _db.Obligations.Add(new ObligationRecord
+        {
+            Id = obligation.Id, Description = obligation.Description, AmountMinorUnits = obligation.Amount.MinorUnits,
+            Currency = obligation.Amount.Currency, DueAt = obligation.DueAt, CreatedAt = obligation.CreatedAt, Status = (int)obligation.Status
+        });
+        return Task.FromResult(obligation);
+    }
+
+    public async Task UpdateObligationAsync(Obligation obligation, CancellationToken cancellationToken)
+    {
+        var row = await _db.Obligations.SingleAsync(x => x.Id == obligation.Id, cancellationToken);
+        row.Status = (int)obligation.Status;
+    }
+
     public Task SaveChangesAsync(CancellationToken cancellationToken) => _db.SaveChangesAsync(cancellationToken);
 
     public async Task BeginTransactionAsync(CancellationToken cancellationToken, IsolationLevel isolationLevel = IsolationLevel.ReadCommitted) => _transaction = await _db.Database.BeginTransactionAsync(isolationLevel, cancellationToken);
