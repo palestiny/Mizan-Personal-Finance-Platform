@@ -14,23 +14,21 @@ Mizan's authoritative financial model is **Operation + Effect**. Only accepted i
 | M2 explicit reversal | Implemented, merged, and runtime-verified |
 | M2 account lifecycle | Implemented, merged, and runtime-verified |
 | M2 recoverables / reimbursements | Implemented, merged, and runtime-verified |
+| M2 shared expenses / advances | Implemented, merged, and runtime-verified |
 
-### M2 Recoverables / Reimbursements
+### M2 Shared Expenses / Advances
 
-- Recoverables are authoritative financial state represented by immutable Recoverable Effects.
-- A Recoverable Expense decreases an owned account balance and creates an outstanding recoverable claim.
-- Recoverable Settlement increases the owned account balance and reduces the claim.
-- Partial settlement is supported.
-- Settlement cannot exceed outstanding recoverable balance.
-- Recoverable currency is explicit and settlement currency must match.
-- Reversal remains the correction mechanism.
-- Counterparty identity is intentionally deferred to a first-class Person/Contact entity.
-- Waiver/write-off is deferred.
-- Concurrent over-settlement is protected through serializable transaction handling and verification coverage.
+- Shared Expense records the total payment as an account decrease and the recoverable portion as a Recoverable Effect.
+- The personal portion is derived as Total - Recoverable; no separate accounting engine is introduced.
+- Recoverable Expense continues to represent a fully recoverable advance.
+- Recoverable settlement semantics remain unchanged, including partial settlement and currency matching.
+- Reversal preserves both account and recoverable-effect integrity and rejects a reversal that would make the recoverable balance negative; settlements must be reversed first.
+- Idempotent retry semantics are preserved for Shared Expense commands.
+- No Person/Contact, group-splitting engine, waiver/write-off, or generalized receivables engine is introduced.
 
 ## Verification
 
-GitHub Actions run **#140** completed successfully after the final concurrency-safe recoverable implementation.
+GitHub Actions run **#151** completed successfully after the final concurrency-safe shared-expense reversal hardening.
 
 Verified in that run:
 - Build
@@ -43,7 +41,12 @@ Verified in that run:
 - Recoverable concurrent over-settlement protection
 - Recoverable over-settlement rejection
 - Recoverable expense reversal
+- Shared Expense creation and account/recoverable effects
+- Shared Expense idempotent retry
+- invalid recoverable portion rejection
+- settled-recoverable reversal protection
+- settlement-before-reversal ordering
 
 ## Next action
 
-M2 Recoverables is GREEN and merged. Continue M2 by identifying the next concrete capability from the accepted roadmap. Open a new design gate only if the next capability introduces a material product, domain, or architecture decision.
+M2 Shared Expenses / Advances is GREEN and merged. Continue M2 by identifying the next concrete capability from the accepted roadmap. Open a new design gate only if the next capability introduces a material product, domain, or architecture decision.
