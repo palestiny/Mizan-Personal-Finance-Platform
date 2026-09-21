@@ -253,6 +253,41 @@ public sealed class FinanceService
         throw lastFailure ?? new InvalidOperationException("Reversal failed.");
     }
 
+
+    public async Task<Obligation> CreateObligationAsync(CreateObligationCommand command, CancellationToken cancellationToken)
+    {
+        var obligation = Obligation.Create(
+            command.Description,
+            Money.FromMinorUnits(command.Amount.MinorUnits, command.Amount.Currency),
+            Parse(command.DueAt));
+        await _repository.AddObligationAsync(obligation, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+        return obligation;
+    }
+
+    public async Task<Obligation> SettleObligationAsync(SettleObligationCommand command, CancellationToken cancellationToken)
+    {
+        var obligation = await _repository.GetObligationAsync(command.ObligationId, cancellationToken)
+            ?? throw new DomainValidationException("Obligation was not found.");
+        obligation.Settle();
+        await _repository.UpdateObligationAsync(obligation, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+        return obligation;
+    }
+
+    public async Task<Obligation> CancelObligationAsync(CancelObligationCommand command, CancellationToken cancellationToken)
+    {
+        var obligation = await _repository.GetObligationAsync(command.ObligationId, cancellationToken)
+            ?? throw new DomainValidationException("Obligation was not found.");
+        obligation.Cancel();
+        await _repository.UpdateObligationAsync(obligation, cancellationToken);
+        await _repository.SaveChangesAsync(cancellationToken);
+        return obligation;
+    }
+
+    public async Task<Obligation?> GetObligationAsync(Guid obligationId, CancellationToken cancellationToken) =>
+        await _repository.GetObligationAsync(obligationId, cancellationToken);
+
     public async Task<IReadOnlyList<FinancialEffect>> GetEffectsAsync(Guid accountId, CancellationToken cancellationToken) =>
         await _repository.GetEffectsAsync(accountId, cancellationToken);
 

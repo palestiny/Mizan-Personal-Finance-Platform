@@ -9,6 +9,7 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
     public DbSet<EffectRecord> Effects => Set<EffectRecord>();
     public DbSet<RecoverableEffectRecord> RecoverableEffects => Set<RecoverableEffectRecord>();
     public DbSet<IdempotencyRecord> IdempotencyKeys => Set<IdempotencyRecord>();
+    public DbSet<ObligationRecord> Obligations => Set<ObligationRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -57,6 +58,20 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.Property(x => x.Currency).HasMaxLength(3).IsRequired();
             e.Property(x => x.CounterpartyName).HasMaxLength(200);
             e.HasOne<OperationRecord>().WithMany().HasForeignKey(x => x.OperationId).OnDelete(DeleteBehavior.Restrict);
+        });
+
+
+        modelBuilder.Entity<ObligationRecord>(e =>
+        {
+            e.ToTable("obligations");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.Description).HasMaxLength(500).IsRequired();
+            e.Property(x => x.Currency).HasMaxLength(3).IsRequired();
+            e.Property(x => x.AmountMinorUnits).IsRequired();
+            e.Property(x => x.DueAt).IsRequired();
+            e.Property(x => x.CreatedAt).IsRequired();
+            e.Property(x => x.Status).IsRequired();
+            e.HasIndex(x => new { x.Status, x.DueAt });
         });
 
         modelBuilder.Entity<IdempotencyRecord>(e =>
@@ -120,4 +135,16 @@ public sealed class IdempotencyRecord
 {
     public string Key { get; set; } = "";
     public Guid OperationId { get; set; }
+}
+
+
+public sealed class ObligationRecord
+{
+    public Guid Id { get; set; }
+    public string Description { get; set; } = "";
+    public long AmountMinorUnits { get; set; }
+    public string Currency { get; set; } = "";
+    public DateTimeOffset DueAt { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public int Status { get; set; }
 }

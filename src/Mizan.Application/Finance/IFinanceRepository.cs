@@ -14,6 +14,9 @@ public interface IFinanceRepository
     Task AddAcceptedOperationAsync(FinancialOperation operation, string idempotencyKey, CancellationToken cancellationToken);
     Task<IReadOnlyList<FinancialEffect>> GetEffectsAsync(Guid accountId, CancellationToken cancellationToken);
     Task<IReadOnlyList<RecoverableEffect>> GetRecoverableEffectsAsync(Guid recoverableId, CancellationToken cancellationToken);
+    Task<Obligation?> GetObligationAsync(Guid obligationId, CancellationToken cancellationToken);
+    Task<Obligation> AddObligationAsync(Obligation obligation, CancellationToken cancellationToken);
+    Task UpdateObligationAsync(Obligation obligation, CancellationToken cancellationToken);
     Task SaveChangesAsync(CancellationToken cancellationToken);
     Task BeginTransactionAsync(CancellationToken cancellationToken, IsolationLevel isolationLevel = IsolationLevel.ReadCommitted);
     Task CommitTransactionAsync(CancellationToken cancellationToken);

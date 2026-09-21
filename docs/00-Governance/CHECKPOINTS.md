@@ -224,3 +224,14 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Verification:** GitHub Actions run #151 completed successfully. Build, PostgreSQL migration application, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, and all Shared Expenses API scenarios are GREEN.
 - **Root-cause hardening:** Shared Expense semantic idempotency was corrected to compare generated recoverable-effect semantics rather than random Recoverable IDs; reversal was hardened with Serializable transaction handling so concurrent settlements cannot race a recoverable reversal into a negative balance.
 - **Merge:** PR #16 was squash-merged into `main` at commit `2cd8f7a2952c984cfef87a259c953a1bfd34100a`.
+
+
+## CP-016 — M2 Obligations / Expected Future Payments
+- **Status:** Completed and runtime-verified; merge pending
+- **Date:** 2026-09-21
+- **Phase:** M2 — Trustworthy Financial Core
+- **Gate:** DG-017 Obligations / Expected Future Payments
+- **Product Owner decision:** First-class Planned / Settled / Cancelled obligation state; planned obligations do not affect authoritative account balances; actual payment remains a separate FinancialOperation; automatic payment linkage and recurring/forecasting machinery are deferred.
+- **Implemented:** Obligation domain model and lifecycle, PostgreSQL persistence/migration, API create/settle/cancel/read endpoints, domain/API tests, and CI coverage.
+- **Verification:** GitHub Actions run #153 completed successfully. Build, committed EF migration application against PostgreSQL, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, Shared Expenses, and all Obligations API scenarios are GREEN.
+- **Pre-merge hardening:** removed a duplicate SaveChangesAsync declaration in IFinanceRepository before accepting the GREEN result.

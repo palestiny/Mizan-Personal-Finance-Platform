@@ -16,3 +16,6 @@ public sealed record AcceptSharedExpenseCommand(Guid AccountId, MoneyInput Total
 public sealed record SettleRecoverableCommand(Guid AccountId, Guid RecoverableId, MoneyInput Amount, string EffectiveAt, string IdempotencyKey);
 public sealed record CloseAccountCommand(Guid AccountId);
 public sealed record ReopenAccountCommand(Guid AccountId);
+public sealed record CreateObligationCommand(string Description, MoneyInput Amount, string DueAt);
+public sealed record SettleObligationCommand(Guid ObligationId);
+public sealed record CancelObligationCommand(Guid ObligationId);

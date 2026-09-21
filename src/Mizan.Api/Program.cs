@@ -40,6 +40,32 @@ if (app.Environment.IsEnvironment("Testing"))
 
 app.MapGet("/", () => Results.Ok(new { service = "Mizan", status = "ok" }));
 
+
+app.MapPost("/api/obligations", async (CreateObligationRequest request, FinanceService service, CancellationToken ct) =>
+{
+    var obligation = await service.CreateObligationAsync(
+        new CreateObligationCommand(request.Description, new MoneyInput(request.AmountMinorUnits, request.Currency), request.DueAt.ToString("O")), ct);
+    return Results.Created($"/api/obligations/{obligation.Id}", ObligationResponse.From(obligation));
+});
+
+app.MapPost("/api/obligations/{obligationId:guid}/settle", async (Guid obligationId, FinanceService service, CancellationToken ct) =>
+{
+    var obligation = await service.SettleObligationAsync(new SettleObligationCommand(obligationId), ct);
+    return Results.Ok(ObligationResponse.From(obligation));
+});
+
+app.MapPost("/api/obligations/{obligationId:guid}/cancel", async (Guid obligationId, FinanceService service, CancellationToken ct) =>
+{
+    var obligation = await service.CancelObligationAsync(new CancelObligationCommand(obligationId), ct);
+    return Results.Ok(ObligationResponse.From(obligation));
+});
+
+app.MapGet("/api/obligations/{obligationId:guid}", async (Guid obligationId, FinanceService service, CancellationToken ct) =>
+{
+    var obligation = await service.GetObligationAsync(obligationId, ct);
+    return obligation is null ? Results.NotFound() : Results.Ok(ObligationResponse.From(obligation));
+});
+
 app.MapPost("/api/accounts", async (CreateAccountRequest request, FinanceService service, CancellationToken ct) =>
 {
     var account = await service.CreateAccountAsync(
@@ -188,6 +214,12 @@ app.MapGet("/api/accounts/{accountId:guid}/balance/explanation", async (Guid acc
 app.Run();
 
 public partial class Program { }
+
+public sealed record CreateObligationRequest(string Description, long AmountMinorUnits, string Currency, DateTimeOffset DueAt);
+public sealed record ObligationResponse(Guid Id, string Description, long AmountMinorUnits, string Currency, DateTimeOffset DueAt, DateTimeOffset CreatedAt, ObligationStatus Status)
+{
+    public static ObligationResponse From(Obligation o) => new(o.Id, o.Description, o.Amount.MinorUnits, o.Amount.Currency, o.DueAt, o.CreatedAt, o.Status);
+}
 
 public sealed record CreateAccountRequest(string Name, AccountType Type, string Currency, long? OpeningBalanceMinorUnits);
 public sealed record AcceptIncomeRequest(Guid AccountId, long AmountMinorUnits, string Currency, DateTimeOffset EffectiveAt, string IdempotencyKey);
