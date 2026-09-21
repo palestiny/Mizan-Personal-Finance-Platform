@@ -350,7 +350,7 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     [Fact]
     public async Task Api_should_return_same_shared_expense_for_idempotent_retry()
     {
-        var account = await CreateAccountAsync("Shared Expense Retry");
+        var account = await CreateAccountAsync("Shared Expense Retry", 5000);
 
         var request = new
         {
