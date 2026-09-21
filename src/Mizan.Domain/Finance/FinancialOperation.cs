@@ -9,6 +9,7 @@ public enum FinancialOperationType
     OwnedAccountTransfer,
     Reversal,
     RecoverableExpense,
+    SharedExpense,
     RecoverableSettlement
 }
 
@@ -70,6 +71,34 @@ public sealed class FinancialOperation
                 recordedAt,
                 ImmutableArray.Create(CreateEffect(id, accountId, amount, EffectDirection.Decrease, normalizedEffectiveAt, recordedAt, 0)),
                 ImmutableArray.Create(new RecoverableEffect(Guid.NewGuid(), id, recoverableId, amount, RecoverableEffectDirection.Increase, counterpartyName.Trim(), normalizedEffectiveAt, recordedAt, 0)));
+        });
+    }
+
+    public static OperationBuilder SharedExpense(Guid accountId, Money totalAmount, Money recoverableAmount, string counterpartyName, DateTimeOffset effectiveAt)
+    {
+        if (string.IsNullOrWhiteSpace(counterpartyName))
+            throw new DomainValidationException("Shared expense counterparty name is required.");
+
+        if (!string.Equals(totalAmount.Currency, recoverableAmount.Currency, StringComparison.OrdinalIgnoreCase))
+            throw new DomainValidationException("Shared expense amounts must use the same currency.");
+
+        if (recoverableAmount.MinorUnits <= 0)
+            throw new DomainValidationException("Shared expense recoverable amount must be greater than zero.");
+
+        if (recoverableAmount.MinorUnits > totalAmount.MinorUnits)
+            throw new DomainValidationException("Shared expense recoverable amount cannot exceed total amount.");
+
+        var normalizedEffectiveAt = effectiveAt.ToUniversalTime();
+        return new OperationBuilder(FinancialOperationType.SharedExpense, normalizedEffectiveAt, (id, recordedAt) =>
+        {
+            var recoverableId = Guid.NewGuid();
+            return new FinancialOperation(
+                id,
+                FinancialOperationType.SharedExpense,
+                normalizedEffectiveAt,
+                recordedAt,
+                ImmutableArray.Create(CreateEffect(id, accountId, totalAmount, EffectDirection.Decrease, normalizedEffectiveAt, recordedAt, 0)),
+                ImmutableArray.Create(new RecoverableEffect(Guid.NewGuid(), id, recoverableId, recoverableAmount, RecoverableEffectDirection.Increase, counterpartyName.Trim(), normalizedEffectiveAt, recordedAt, 0)));
         });
     }
 

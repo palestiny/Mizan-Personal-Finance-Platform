@@ -314,6 +314,213 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
         balance!.AmountMinorUnits.Should().Be(5000);
     }
 
+    [Fact]
+    public async Task Api_should_create_shared_expense_with_total_account_decrease_and_partial_recoverable()
+    {
+        var account = await CreateAccountAsync("Shared Expense Cash", 5000);
+
+        var created = await _client.PostAsJsonAsync("/api/operations/shared-expense", new
+        {
+            accountId = account.Id,
+            totalAmountMinorUnits = 1000,
+            recoverableAmountMinorUnits = 400,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "shared-expense-1"
+        });
+
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+        var operation = await created.Content.ReadFromJsonAsync<OperationResponse>();
+        operation!.Type.Should().Be("SharedExpense");
+        operation.Effects.Should().ContainSingle();
+        operation.Effects[0].AmountMinorUnits.Should().Be(1000);
+        operation.Effects[0].Direction.Should().Be("Decrease");
+        operation.RecoverableEffects.Should().ContainSingle();
+        operation.RecoverableEffects[0].AmountMinorUnits.Should().Be(400);
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(4000);
+
+        var recoverable = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{operation.RecoverableEffects[0].RecoverableId}");
+        recoverable!.OutstandingMinorUnits.Should().Be(400);
+        recoverable.Status.Should().Be("Outstanding");
+    }
+
+    [Fact]
+    public async Task Api_should_return_same_shared_expense_for_idempotent_retry()
+    {
+        var account = await CreateAccountAsync("Shared Expense Retry", 5000);
+
+        var request = new
+        {
+            accountId = account.Id,
+            totalAmountMinorUnits = 1000,
+            recoverableAmountMinorUnits = 400,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "shared-expense-retry-1"
+        };
+
+        var first = await _client.PostAsJsonAsync("/api/operations/shared-expense", request);
+        var second = await _client.PostAsJsonAsync("/api/operations/shared-expense", request);
+
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var firstOperation = await first.Content.ReadFromJsonAsync<OperationResponse>();
+        var secondOperation = await second.Content.ReadFromJsonAsync<OperationResponse>();
+
+        secondOperation!.Id.Should().Be(firstOperation!.Id);
+        secondOperation.RecoverableEffects.Should().ContainSingle();
+        secondOperation.RecoverableEffects[0].RecoverableId.Should().Be(firstOperation.RecoverableEffects[0].RecoverableId);
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(4000);
+    }
+
+    [Fact]
+    public async Task Api_should_reject_invalid_shared_expense_recoverable_portion()
+    {
+        var account = await CreateAccountAsync("Shared Expense Invalid");
+
+        var zero = await _client.PostAsJsonAsync("/api/operations/shared-expense", new
+        {
+            accountId = account.Id,
+            totalAmountMinorUnits = 1000,
+            recoverableAmountMinorUnits = 0,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "shared-expense-zero"
+        });
+        zero.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var aboveTotal = await _client.PostAsJsonAsync("/api/operations/shared-expense", new
+        {
+            accountId = account.Id,
+            totalAmountMinorUnits = 1000,
+            recoverableAmountMinorUnits = 1001,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "shared-expense-above"
+        });
+        aboveTotal.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
+    [Fact]
+    public async Task Api_should_reject_shared_expense_reversal_while_recoverable_is_settled()
+    {
+        var account = await CreateAccountAsync("Shared Expense Correction", 5000);
+
+        var created = await _client.PostAsJsonAsync("/api/operations/shared-expense", new
+        {
+            accountId = account.Id,
+            totalAmountMinorUnits = 1000,
+            recoverableAmountMinorUnits = 400,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "shared-expense-correction-1"
+        });
+        var original = await created.Content.ReadFromJsonAsync<OperationResponse>();
+        var recoverableId = original!.RecoverableEffects[0].RecoverableId;
+
+        var settlement = await _client.PostAsJsonAsync("/api/operations/recoverable-settlement", new
+        {
+            accountId = account.Id,
+            recoverableId,
+            amountMinorUnits = 200,
+            currency = "EGP",
+            effectiveAt = "2026-09-22T10:00:00+03:00",
+            idempotencyKey = "shared-expense-settlement-1"
+        });
+        settlement.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var beforeReversal = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
+        beforeReversal!.OutstandingMinorUnits.Should().Be(200);
+
+        var reversal = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = original.Id,
+            effectiveAt = "2026-09-23T10:00:00+03:00",
+            idempotencyKey = "shared-expense-reversal-1"
+        });
+        reversal.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var afterRejectedReversal = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
+        afterRejectedReversal!.OutstandingMinorUnits.Should().Be(200);
+        afterRejectedReversal.Status.Should().Be("Outstanding");
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(4200);
+    }
+
+    [Fact]
+    public async Task Api_should_reverse_settlement_before_reversing_shared_expense()
+    {
+        var account = await CreateAccountAsync("Shared Expense Full Correction", 5000);
+
+        var created = await _client.PostAsJsonAsync("/api/operations/shared-expense", new
+        {
+            accountId = account.Id,
+            totalAmountMinorUnits = 1000,
+            recoverableAmountMinorUnits = 400,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "shared-expense-full-correction-1"
+        });
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+        var original = await created.Content.ReadFromJsonAsync<OperationResponse>();
+        var recoverableId = original!.RecoverableEffects[0].RecoverableId;
+
+        var settlement = await _client.PostAsJsonAsync("/api/operations/recoverable-settlement", new
+        {
+            accountId = account.Id,
+            recoverableId,
+            amountMinorUnits = 400,
+            currency = "EGP",
+            effectiveAt = "2026-09-22T10:00:00+03:00",
+            idempotencyKey = "shared-expense-full-correction-2"
+        });
+        settlement.StatusCode.Should().Be(HttpStatusCode.OK);
+        var settlementOperation = await settlement.Content.ReadFromJsonAsync<OperationResponse>();
+
+        var directReversal = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = original.Id,
+            effectiveAt = "2026-09-23T10:00:00+03:00",
+            idempotencyKey = "shared-expense-full-correction-3"
+        });
+        directReversal.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+
+        var reverseSettlement = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = settlementOperation!.Id,
+            effectiveAt = "2026-09-24T10:00:00+03:00",
+            idempotencyKey = "shared-expense-full-correction-4"
+        });
+        reverseSettlement.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var reverseOriginal = await _client.PostAsJsonAsync("/api/operations/reversal", new
+        {
+            originalOperationId = original.Id,
+            effectiveAt = "2026-09-25T10:00:00+03:00",
+            idempotencyKey = "shared-expense-full-correction-5"
+        });
+        reverseOriginal.StatusCode.Should().Be(HttpStatusCode.OK);
+
+        var recoverable = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
+        recoverable!.OutstandingMinorUnits.Should().Be(0);
+        recoverable.Status.Should().Be("Settled");
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(5000);
+    }
+
     private async Task<AccountResponse> CreateAccountAsync(string name, long? openingBalanceMinorUnits = null)
     {
         var response = await _client.PostAsJsonAsync("/api/accounts", new { name, type = "Cash", currency = "EGP", openingBalanceMinorUnits });
