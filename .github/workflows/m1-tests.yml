@@ -59,7 +59,7 @@ jobs:
       - name: Test — API — Reversal
         run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_reverse_an_accepted_operation_without_mutating_the_original"
       - name: Test — API — Account Lifecycle
-        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_close_and_reopen_account|FullyQualifiedName~Api_should_reject_normal_operations_on_closed_account_but_keep_balance_readable|FullyQualifiedName~Api_should_allow_reversal_after_account_is_closed"
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_close_and_reopen_account|FullyQualifiedName~Api_should_reject_normal_operations_on_closed_account_but_keep_balance_readable|FullyQualifiedName~Api_should_allow_reversal_after_account_is_closed|FullyQualifiedName~Api_should_serialize_account_close_against_concurrent_financial_operation"
 
       - name: Test — API — Recoverables
         run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_create_and_settle_recoverable_partially|FullyQualifiedName~Api_should_prevent_concurrent_over_settlement|FullyQualifiedName~Api_should_reject_recoverable_over_settlement|FullyQualifiedName~Api_should_allow_reversal_of_recoverable_expense"
