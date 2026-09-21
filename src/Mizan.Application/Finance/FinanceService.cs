@@ -267,22 +267,50 @@ public sealed class FinanceService
 
     public async Task<Obligation> SettleObligationAsync(SettleObligationCommand command, CancellationToken cancellationToken)
     {
-        var obligation = await _repository.GetObligationAsync(command.ObligationId, cancellationToken)
-            ?? throw new DomainValidationException("Obligation was not found.");
-        obligation.Settle();
-        await _repository.UpdateObligationAsync(obligation, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return obligation;
+        return await TransitionObligationAsync(command.ObligationId, settle: true, cancellationToken);
     }
 
     public async Task<Obligation> CancelObligationAsync(CancelObligationCommand command, CancellationToken cancellationToken)
     {
-        var obligation = await _repository.GetObligationAsync(command.ObligationId, cancellationToken)
-            ?? throw new DomainValidationException("Obligation was not found.");
-        obligation.Cancel();
-        await _repository.UpdateObligationAsync(obligation, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return obligation;
+        return await TransitionObligationAsync(command.ObligationId, settle: false, cancellationToken);
+    }
+
+    private async Task<Obligation> TransitionObligationAsync(Guid obligationId, bool settle, CancellationToken cancellationToken)
+    {
+        Exception? lastFailure = null;
+
+        for (var attempt = 1; attempt <= 3; attempt++)
+        {
+            await _repository.BeginTransactionAsync(cancellationToken, System.Data.IsolationLevel.Serializable);
+            try
+            {
+                var obligation = await _repository.GetObligationAsync(obligationId, cancellationToken)
+                    ?? throw new DomainValidationException("Obligation was not found.");
+
+                if (settle)
+                    obligation.Settle();
+                else
+                    obligation.Cancel();
+
+                await _repository.UpdateObligationAsync(obligation, cancellationToken);
+                await _repository.SaveChangesAsync(cancellationToken);
+                await _repository.CommitTransactionAsync(cancellationToken);
+                return obligation;
+            }
+            catch (Exception ex)
+            {
+                lastFailure = ex;
+                await _repository.RollbackTransactionAsync(cancellationToken);
+
+                if (ex is DomainValidationException or IdempotencyConflictException)
+                    throw;
+
+                if (attempt < 3)
+                    continue;
+            }
+        }
+
+        throw lastFailure ?? new InvalidOperationException("Obligation transition failed.");
     }
 
     public async Task<Obligation?> GetObligationAsync(Guid obligationId, CancellationToken cancellationToken) =>
