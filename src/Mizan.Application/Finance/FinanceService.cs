@@ -177,12 +177,13 @@ public sealed class FinanceService
         if (string.IsNullOrWhiteSpace(command.IdempotencyKey))
             throw new DomainValidationException("Idempotency key is required.");
 
+        var effectiveAt = Parse(command.EffectiveAt);
         var existingByKey = await _repository.GetOperationByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
         if (existingByKey is not null)
         {
             if (existingByKey.Type != FinancialOperationType.Reversal ||
                 existingByKey.OriginalOperationId != command.OriginalOperationId ||
-                existingByKey.EffectiveAt != Parse(command.EffectiveAt))
+                existingByKey.EffectiveAt != effectiveAt)
                 throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
 
             return existingByKey;
@@ -195,43 +196,61 @@ public sealed class FinanceService
         if (existingReversal is not null)
             throw new DomainValidationException("The original operation has already been reversed.");
 
-        var operation = FinancialOperation.Reversal(original, Parse(command.EffectiveAt)).Accept();
+        var operation = FinancialOperation.Reversal(original, effectiveAt).Accept();
+        var hasRecoverableIncrease = original.RecoverableEffects.Any(x => x.Direction == RecoverableEffectDirection.Increase);
 
-        foreach (var recoverableEffect in original.RecoverableEffects.Where(x => x.Direction == RecoverableEffectDirection.Increase))
-        {
-            var currentEffects = await _repository.GetRecoverableEffectsAsync(recoverableEffect.RecoverableId, cancellationToken);
-            var outstanding = checked(currentEffects.Sum(x => x.SignedMinorUnits));
-            if (outstanding < recoverableEffect.Amount.MinorUnits)
-                throw new DomainValidationException("The recoverable operation cannot be reversed while its recoverable claim has been partially settled. Reverse the settlements first.");
-        }
+        Exception? lastFailure = null;
 
-        await _repository.BeginTransactionAsync(cancellationToken);
-        try
+        for (var attempt = 1; attempt <= 3; attempt++)
         {
-            await _repository.AddAcceptedOperationAsync(operation, command.IdempotencyKey, cancellationToken);
-            await _repository.SaveChangesAsync(cancellationToken);
-            await _repository.CommitTransactionAsync(cancellationToken);
-            return operation;
-        }
-        catch
-        {
-            await _repository.RollbackTransactionAsync(cancellationToken);
+            await _repository.BeginTransactionAsync(
+                cancellationToken,
+                hasRecoverableIncrease
+                    ? System.Data.IsolationLevel.Serializable
+                    : System.Data.IsolationLevel.ReadCommitted);
 
-            var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
-            if (concurrent is not null)
+            try
             {
-                if (!SemanticallyMatches(concurrent, operation))
-                    throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+                foreach (var recoverableEffect in original.RecoverableEffects.Where(x => x.Direction == RecoverableEffectDirection.Increase))
+                {
+                    var currentEffects = await _repository.GetRecoverableEffectsAsync(recoverableEffect.RecoverableId, cancellationToken);
+                    var outstanding = checked(currentEffects.Sum(x => x.SignedMinorUnits));
+                    if (outstanding < recoverableEffect.Amount.MinorUnits)
+                        throw new DomainValidationException("The recoverable operation cannot be reversed after its claim has been settled. Reverse the settlements first.");
+                }
 
-                return concurrent;
+                await _repository.AddAcceptedOperationAsync(operation, command.IdempotencyKey, cancellationToken);
+                await _repository.SaveChangesAsync(cancellationToken);
+                await _repository.CommitTransactionAsync(cancellationToken);
+                return operation;
             }
+            catch (Exception ex)
+            {
+                lastFailure = ex;
+                await _repository.RollbackTransactionAsync(cancellationToken);
 
-            var concurrentReversal = await _repository.GetReversalByOriginalOperationIdAsync(command.OriginalOperationId, cancellationToken);
-            if (concurrentReversal is not null)
-                throw new DomainValidationException("The original operation has already been reversed.");
+                var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(command.IdempotencyKey, cancellationToken);
+                if (concurrent is not null)
+                {
+                    if (!SemanticallyMatches(concurrent, operation))
+                        throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
 
-            throw;
+                    return concurrent;
+                }
+
+                var concurrentReversal = await _repository.GetReversalByOriginalOperationIdAsync(command.OriginalOperationId, cancellationToken);
+                if (concurrentReversal is not null)
+                    throw new DomainValidationException("The original operation has already been reversed.");
+
+                if (ex is DomainValidationException or IdempotencyConflictException)
+                    throw;
+
+                if (attempt < 3)
+                    continue;
+            }
         }
+
+        throw lastFailure ?? new InvalidOperationException("Reversal failed.");
     }
 
     public async Task<IReadOnlyList<FinancialEffect>> GetEffectsAsync(Guid accountId, CancellationToken cancellationToken) =>
