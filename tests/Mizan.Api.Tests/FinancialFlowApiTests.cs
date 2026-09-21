@@ -576,6 +576,30 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
+    public async Task Api_should_allow_only_one_concurrent_obligation_settlement()
+    {
+        var created = await _client.PostAsJsonAsync("/api/obligations", new
+        {
+            description = "Concurrent Rent",
+            amountMinorUnits = 2000,
+            currency = "EGP",
+            dueAt = "2026-10-01T00:00:00+03:00"
+        });
+        created.StatusCode.Should().Be(HttpStatusCode.Created);
+        var obligation = await created.Content.ReadFromJsonAsync<ObligationResponse>();
+
+        var responses = await Task.WhenAll(
+            _client.PostAsync($"/api/obligations/{obligation!.Id}/settle", null),
+            _client.PostAsync($"/api/obligations/{obligation.Id}/settle", null));
+
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.OK);
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.BadRequest);
+
+        var final = await _client.GetFromJsonAsync<ObligationResponse>($"/api/obligations/{obligation.Id}");
+        final!.Status.Should().Be("Settled");
+    }
+
+    [Fact]
     public async Task Api_should_reject_duplicate_obligation_lifecycle_transition()
     {
         var created = await _client.PostAsJsonAsync("/api/obligations", new
