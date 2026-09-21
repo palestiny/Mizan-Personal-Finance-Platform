@@ -58,6 +58,21 @@ namespace Mizan.Infrastructure.Migrations
                 b.ToTable("idempotency_keys", (string)null);
             });
 
+
+            modelBuilder.Entity("Mizan.Infrastructure.Persistence.ObligationRecord", b =>
+            {
+                b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
+                b.Property<long>("AmountMinorUnits").HasColumnType("bigint");
+                b.Property<DateTimeOffset>("CreatedAt").HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("DueAt").HasColumnType("timestamp with time zone");
+                b.Property<string>("Currency").IsRequired().HasMaxLength(3).HasColumnType("character varying(3)");
+                b.Property<string>("Description").IsRequired().HasMaxLength(500).HasColumnType("character varying(500)");
+                b.Property<int>("Status").HasColumnType("integer");
+                b.HasKey("Id");
+                b.HasIndex("Status", "DueAt");
+                b.ToTable("obligations", (string)null);
+            });
+
             modelBuilder.Entity("Mizan.Infrastructure.Persistence.OperationRecord", b =>
             {
                 b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
