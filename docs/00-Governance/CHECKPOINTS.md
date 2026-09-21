@@ -238,11 +238,12 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Merge:** PR #17 was squash-merged into `main` at commit `fe6951da6e010f8b957513e595ede78350b72604`.
 
 ## CP-017 — M2 Obligation Lifecycle Concurrency Hardening
-- **Status:** Implemented; verification pending
+- **Status:** Completed, merged, and runtime-verified
 - **Date:** 2026-09-21
 - **Scope:** Close the concurrent lifecycle-transition gap identified during post-merge review of DG-017.
 - **Root cause:** Obligation settlement/cancellation previously loaded and transitioned state outside a transaction, allowing concurrent requests to observe `Planned` simultaneously.
 - **Fix:** Lifecycle transitions now execute inside a PostgreSQL `Serializable` transaction with bounded retry on serialization/concurrency failure.
 - **Invariant:** At most one concurrent lifecycle transition can successfully move a Planned obligation to a terminal state; the losing request re-evaluates the authoritative state and is rejected by the domain lifecycle rule.
 - **Test:** Added API concurrency test covering two simultaneous settlement requests; exactly one must succeed and the final state must be `Settled`.
-- **Verification:** GitHub Actions verification pending.
+- **Verification:** GitHub Actions run #155 completed successfully. Build, committed EF migration application against PostgreSQL, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, Shared Expenses, and the new concurrent Obligation settlement scenario are GREEN.
+- **Merge:** PR #18 was squash-merged into `main` at commit `1241a1127683c2c2f9146e45ac668c69b516fc1b`.
