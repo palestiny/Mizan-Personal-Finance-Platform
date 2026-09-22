@@ -288,3 +288,15 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Invariant:** Capture interpretation and AI/parser output cannot directly create authoritative financial state.
 - **Rejected/deferred:** Direct interpretation into financial commands (Option A) rejected for the first M3 slice; structured-only capture (Option C) deferred pending product evidence.
 - **Next:** DG-019 Proposal Model & Lifecycle before runtime implementation.
+
+
+## CP-022 — M3 Proposal Model & Lifecycle
+- **Status:** Completed — Product Owner decision accepted
+- **Date:** 2026-09-22
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-019 Proposal Model & Lifecycle
+- **Decision:** Persisted non-authoritative Proposal with lifecycle `Draft → ReadyForConfirmation → Confirmed` and terminal `Rejected / Expired / Failed` states.
+- **Confirmation:** Option B accepted; the existing financial command remains the authoritative execution/idempotency boundary, while the Proposal stores the confirmation-to-command relationship.
+- **Invariants:** Proposal confirmation cannot directly create Effects; unresolved proposals cannot mutate authoritative financial state; concurrent confirmation cannot create duplicate authoritative Operations.
+- **Deferred:** Exact expiration TTL until UX/implementation evidence.
+- **Next:** Implement the vendor-neutral Proposal service/API and tests before adding a specific capture interpreter.
