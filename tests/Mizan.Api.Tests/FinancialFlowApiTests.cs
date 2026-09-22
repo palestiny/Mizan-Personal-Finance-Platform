@@ -174,6 +174,43 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
+    public async Task Api_should_allow_only_one_concurrent_reversal_with_different_idempotency_keys()
+    {
+        var account = await CreateAccountAsync("Concurrent Reversal", 1000);
+
+        var income = await _client.PostAsJsonAsync("/api/operations/income", new
+        {
+            accountId = account.Id,
+            amountMinorUnits = 500,
+            currency = "EGP",
+            effectiveAt = "2026-09-20T10:00:00+03:00",
+            idempotencyKey = "concurrent-reversal-original"
+        });
+        income.StatusCode.Should().Be(HttpStatusCode.OK);
+        var original = await income.Content.ReadFromJsonAsync<OperationResponse>();
+
+        var responses = await Task.WhenAll(
+            _client.PostAsJsonAsync("/api/operations/reversal", new
+            {
+                originalOperationId = original!.Id,
+                effectiveAt = "2026-09-21T10:00:00+03:00",
+                idempotencyKey = "concurrent-reversal-a"
+            }),
+            _client.PostAsJsonAsync("/api/operations/reversal", new
+            {
+                originalOperationId = original.Id,
+                effectiveAt = "2026-09-21T10:01:00+03:00",
+                idempotencyKey = "concurrent-reversal-b"
+            }));
+
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.OK);
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.BadRequest);
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(1000);
+    }
+
+    [Fact]
     public async Task Api_should_reverse_an_accepted_operation_without_mutating_the_original()
     {
         var account = await CreateAccountAsync("Reversal Cash", 1000);
