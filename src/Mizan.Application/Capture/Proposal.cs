@@ -34,6 +34,11 @@ public sealed class Proposal
     public void Expire() { EnsureActive(); Status=ProposalStatus.Expired; }
     public void AssociateConfirmation(string key)
     {
+        if(Status==ProposalStatus.ReadyForConfirmation && DateTimeOffset.UtcNow>=ExpiresAt)
+        {
+            Status=ProposalStatus.Expired;
+            throw new DomainValidationException("Proposal has expired.");
+        }
         if(Status!=ProposalStatus.ReadyForConfirmation && Status!=ProposalStatus.Confirmed) throw new DomainValidationException("Proposal is not confirmable.");
         if(string.IsNullOrWhiteSpace(key)) throw new DomainValidationException("Command idempotency key is required.");
         if(CommandIdempotencyKey is not null && !string.Equals(CommandIdempotencyKey,key,StringComparison.Ordinal)) throw new IdempotencyConflictException("The proposal is already associated with a different confirmation idempotency key.");
