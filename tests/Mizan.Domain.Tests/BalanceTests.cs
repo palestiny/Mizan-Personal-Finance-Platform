@@ -36,4 +36,34 @@ public sealed class BalanceTests
 
         rebuilt.Should().Be(first);
     }
+
+    [Fact]
+    public void Recoverable_balance_should_rebuild_from_authoritative_effects()
+    {
+        var account = Account.Create("Cash", AccountType.Cash, "EGP", Money.FromMinorUnits(5_000_00, "EGP"));
+        var expense = FinancialOperation.RecoverableExpense(
+            account.Id,
+            Money.FromMinorUnits(1_000_00, "EGP"),
+            "Ahmed",
+            DateTimeOffset.Parse("2026-09-20T10:00:00+03:00")).Accept();
+
+        var settlement = FinancialOperation.RecoverableSettlement(
+            account.Id,
+            expense.RecoverableEffects.Single().RecoverableId,
+            Money.FromMinorUnits(400_00, "EGP"),
+            DateTimeOffset.Parse("2026-09-21T10:00:00+03:00")).Accept();
+
+        var effects = expense.RecoverableEffects.Concat(settlement.RecoverableEffects)
+            .OrderBy(x => x.EffectiveAt)
+            .ThenBy(x => x.RecordedAt)
+            .ThenBy(x => x.Order)
+            .ThenBy(x => x.Id)
+            .ToArray();
+
+        var derived = effects.Sum(x => x.SignedMinorUnits);
+        var rebuilt = effects.Sum(x => x.SignedMinorUnits);
+
+        derived.Should().Be(600_00);
+        rebuilt.Should().Be(derived);
+    }
 }
