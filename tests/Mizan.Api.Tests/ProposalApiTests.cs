@@ -106,6 +106,45 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
         confirm.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
 
+    [Fact]
+    public async Task Api_should_return_same_operation_for_same_proposal_confirmation_retry()
+    {
+        var account=await CreateAccountAsync("Proposal Retry");
+        var create=await _client.PostAsJsonAsync("/api/proposals",new
+        {
+            originalInput="استلمت 200 جنيه",
+            operationType="Income",
+            accountId=account,
+            amountMinorUnits=20000,
+            currency="EGP",
+            effectiveAt="2026-09-22T10:00:00+03:00",
+            expiresAt="2026-09-23T10:00:00+03:00"
+        });
+        var proposal=await create.Content.ReadFromJsonAsync<ProposalApiResponse>();
+        var first=await _client.PostAsJsonAsync($"/api/proposals/{proposal!.Id}/confirm",new { commandIdempotencyKey="proposal-retry-key" });
+        var second=await _client.PostAsJsonAsync($"/api/proposals/{proposal.Id}/confirm",new { commandIdempotencyKey="proposal-retry-key" });
+        first.StatusCode.Should().Be(HttpStatusCode.OK);
+        second.StatusCode.Should().Be(HttpStatusCode.OK);
+        (await second.Content.ReadFromJsonAsync<OperationResponse>())!.Id.Should().Be((await first.Content.ReadFromJsonAsync<OperationResponse>())!.Id);
+    }
+
+    [Fact]
+    public async Task Api_should_reject_confirmation_after_proposal_expiration()
+    {
+        var account=await CreateAccountAsync("Proposal Expired");
+        var create=await _client.PostAsJsonAsync("/api/proposals",new
+        {
+            originalInput="دفع 100 جنيه",
+            operationType="PersonalExpense",
+            accountId=account,
+            amountMinorUnits=10000,
+            currency="EGP",
+            effectiveAt="2026-09-22T10:00:00+03:00",
+            expiresAt=DateTimeOffset.UtcNow.AddSeconds(-1)
+        });
+        create.StatusCode.Should().Be(HttpStatusCode.BadRequest);
+    }
+
     private async Task<Guid> CreateAccountAsync(string name,long opening=0)
     {
         var response=await _client.PostAsJsonAsync("/api/accounts",new { name,type="Cash",currency="EGP",openingBalanceMinorUnits=opening });
