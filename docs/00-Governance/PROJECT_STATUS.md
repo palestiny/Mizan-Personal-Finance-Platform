@@ -2,7 +2,7 @@
 
 ## Current phase
 
-**M2 — Trustworthy Financial Core**
+**M2 — Trustworthy Financial Core — COMPLETE**
 
 Mizan's authoritative financial model is **Operation + Effect**. Only accepted immutable Operations create authoritative Effects. Reversals and corrections are represented by new Operations/Effects.
 
@@ -60,4 +60,4 @@ Verified in that run:
 
 ## Next action
 
-M2 recovery/rebuild verification is now GREEN for both Account balances and Recoverable outstanding state. The next step is an M2 exit audit against the accepted roadmap and invariants before declaring the phase complete. No new product/domain capability should be introduced until that audit identifies a concrete gap.
+M2 recovery/rebuild verification is now GREEN for both Account balances and Recoverable outstanding state. M2 exit audit is GREEN. The core financial state is correct, explainable, recoverable, and tested. The next phase is M3 — Frictionless Capture; any material product/domain decision must open an explicit design gate before implementation.

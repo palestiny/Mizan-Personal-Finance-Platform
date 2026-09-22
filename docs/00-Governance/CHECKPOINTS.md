@@ -267,3 +267,12 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Test:** Added domain verification covering a recoverable expense followed by partial settlement and rebuilding the outstanding amount from the authoritative effect stream.
 - **Verification:** GitHub Actions run #160 completed successfully on the rebuild verification branch.
 - **Merge:** PR #23 was squash-merged into `main` at commit `1127b0d99ba3c56146813d50e4cf36bc16458868`.
+
+
+## CP-020 — M2 Exit Audit
+- **Status:** Completed
+- **Date:** 2026-09-22
+- **Scope:** Verify the M2 roadmap exit condition against implemented capabilities, financial invariants, recovery/rebuild semantics, and runtime verification.
+- **Result:** GREEN. Core financial state is correct, explainable, recoverable, and tested.
+- **Evidence:** M2-EXIT-AUDIT.md; CI runs #158, #160, and #161; merged M2 implementation and verification PRs.
+- **Decision:** M2 is complete. M3 — Frictionless Capture is the next roadmap phase.
