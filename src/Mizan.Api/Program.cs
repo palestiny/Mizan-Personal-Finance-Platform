@@ -1,5 +1,6 @@
 using Microsoft.EntityFrameworkCore;
 using Mizan.Application.Finance;
+using Mizan.Application.Capture;
 using Mizan.Domain.Finance;
 using Mizan.Infrastructure.Persistence;
 
@@ -10,6 +11,8 @@ builder.Services.AddDbContext<MizanDbContext>(options =>
     options.UseNpgsql(builder.Configuration.GetConnectionString("Mizan") ?? "Host=localhost;Database=mizan;Username=postgres;Password=postgres"));
 builder.Services.AddScoped<IFinanceRepository, EfFinanceRepository>();
 builder.Services.AddScoped<FinanceService>();
+builder.Services.AddScoped<IProposalRepository, EfProposalRepository>();
+builder.Services.AddScoped<ProposalService>();
 
 var app = builder.Build();
 
@@ -39,6 +42,47 @@ if (app.Environment.IsEnvironment("Testing"))
 }
 
 app.MapGet("/", () => Results.Ok(new { service = "Mizan", status = "ok" }));
+
+app.MapPost("/api/proposals", async (CreateProposalRequest request, ProposalService service, CancellationToken ct) =>
+{
+    var proposal = await service.CreateAsync(new CreateProposalCommand(
+        request.OriginalInput, request.OperationType, request.AccountId, request.DestinationAccountId,
+        request.AmountMinorUnits, request.Currency, request.EffectiveAt?.ToString("O"),
+        request.MissingFields, request.Ambiguities, request.InterpretationMetadata, request.ExpiresAt.ToString("O")), ct);
+    return Results.Created($"/api/proposals/{proposal.Id}", ProposalResponse.From(proposal));
+});
+
+app.MapGet("/api/proposals/{proposalId:guid}", async (Guid proposalId, ProposalService service, CancellationToken ct) =>
+{
+    var proposal = await service.GetAsync(proposalId, ct);
+    return proposal is null ? Results.NotFound() : Results.Ok(ProposalResponse.From(proposal));
+});
+
+app.MapPost("/api/proposals/{proposalId:guid}/prepare", async (Guid proposalId, ProposalService service, CancellationToken ct) =>
+{
+    var proposal = await service.PrepareAsync(proposalId, ct);
+    return Results.Ok(ProposalResponse.From(proposal));
+});
+
+app.MapPost("/api/proposals/{proposalId:guid}/reject", async (Guid proposalId, ProposalService service, CancellationToken ct) =>
+{
+    var proposal = await service.RejectAsync(new RejectProposalCommand(proposalId), ct);
+    return Results.Ok(ProposalResponse.From(proposal));
+});
+
+app.MapPost("/api/proposals/{proposalId:guid}/expire", async (Guid proposalId, ProposalService service, CancellationToken ct) =>
+{
+    var proposal = await service.ExpireAsync(new ExpireProposalCommand(proposalId), ct);
+    return Results.Ok(ProposalResponse.From(proposal));
+});
+
+app.MapPost("/api/proposals/{proposalId:guid}/confirm", async (Guid proposalId, ConfirmProposalRequest request, ProposalService service, CancellationToken ct) =>
+{
+    var operation = await service.ConfirmAsync(new ConfirmProposalCommand(proposalId, request.CommandIdempotencyKey), ct);
+    return Results.Ok(OperationResponse.From(operation));
+});
+
+
 
 
 app.MapPost("/api/obligations", async (CreateObligationRequest request, FinanceService service, CancellationToken ct) =>
@@ -214,6 +258,14 @@ app.MapGet("/api/accounts/{accountId:guid}/balance/explanation", async (Guid acc
 app.Run();
 
 public partial class Program { }
+
+
+public sealed record CreateProposalRequest(string OriginalInput, ProposalOperationType OperationType, Guid? AccountId, Guid? DestinationAccountId, long? AmountMinorUnits, string? Currency, DateTimeOffset? EffectiveAt, string? MissingFields, string? Ambiguities, string? InterpretationMetadata, DateTimeOffset ExpiresAt);
+public sealed record ConfirmProposalRequest(string CommandIdempotencyKey);
+public sealed record ProposalResponse(Guid Id,string OriginalInput,ProposalOperationType OperationType,Guid? AccountId,Guid? DestinationAccountId,long? AmountMinorUnits,string? Currency,DateTimeOffset? EffectiveAt,string? MissingFields,string? Ambiguities,string? InterpretationMetadata,ProposalStatus Status,DateTimeOffset CreatedAt,DateTimeOffset ExpiresAt,DateTimeOffset? ConfirmedAt,DateTimeOffset? RejectedAt,string? CommandIdempotencyKey,Guid? OperationId)
+{
+    public static ProposalResponse From(Proposal p)=>new(p.Id,p.OriginalInput,p.OperationType,p.AccountId,p.DestinationAccountId,p.AmountMinorUnits,p.Currency,p.EffectiveAt,p.MissingFields,p.Ambiguities,p.InterpretationMetadata,p.Status,p.CreatedAt,p.ExpiresAt,p.ConfirmedAt,p.RejectedAt,p.CommandIdempotencyKey,p.OperationId);
+}
 
 public sealed record CreateObligationRequest(string Description, long AmountMinorUnits, string Currency, DateTimeOffset DueAt);
 public sealed record ObligationResponse(Guid Id, string Description, long AmountMinorUnits, string Currency, DateTimeOffset DueAt, DateTimeOffset CreatedAt, ObligationStatus Status)
