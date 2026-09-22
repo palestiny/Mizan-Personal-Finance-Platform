@@ -125,7 +125,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
         var second=await _client.PostAsJsonAsync($"/api/proposals/{proposal.Id}/confirm",new { commandIdempotencyKey="proposal-retry-key" });
         first.StatusCode.Should().Be(HttpStatusCode.OK);
         second.StatusCode.Should().Be(HttpStatusCode.OK);
-        (await second.Content.ReadFromJsonAsync<OperationResponse>())!.Id.Should().Be((await first.Content.ReadFromJsonAsync<OperationResponse>())!.Id);
+        (await second.Content.ReadFromJsonAsync<ProposalOperationResponse>())!.Id.Should().Be((await first.Content.ReadFromJsonAsync<ProposalOperationResponse>())!.Id);
     }
 
     [Fact]
