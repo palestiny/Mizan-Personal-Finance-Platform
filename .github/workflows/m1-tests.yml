@@ -57,7 +57,7 @@ jobs:
       - name: Test — API — Balance
         run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_derive_balance_after_income_and_concurrent_retry"
       - name: Test — API — Reversal
-        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_reverse_an_accepted_operation_without_mutating_the_original"
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_reverse_an_accepted_operation_without_mutating_the_original|FullyQualifiedName~Api_should_allow_only_one_concurrent_reversal_with_different_idempotency_keys"
       - name: Test — API — Account Lifecycle
         run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_close_and_reopen_account|FullyQualifiedName~Api_should_reject_normal_operations_on_closed_account_but_keep_balance_readable|FullyQualifiedName~Api_should_allow_reversal_after_account_is_closed|FullyQualifiedName~Api_should_serialize_account_close_against_concurrent_financial_operation"
 
