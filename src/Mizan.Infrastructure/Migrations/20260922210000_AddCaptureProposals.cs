@@ -38,7 +38,7 @@ public partial class AddCaptureProposals : Migration
             table: "capture_proposals",
             column: "CommandIdempotencyKey",
             unique: true,
-            filter: \"CommandIdempotencyKey\" IS NOT NULL");
+            filter: "\"CommandIdempotencyKey\" IS NOT NULL");
 
         migrationBuilder.CreateIndex(
             name: "IX_capture_proposals_Status_ExpiresAt",
