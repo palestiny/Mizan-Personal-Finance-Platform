@@ -625,7 +625,7 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
         recoverable!.OutstandingMinorUnits.Should().Be(0);
 
         var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
-        balance!.AmountMinorUnits.Should().BeOneOf(5000, 6000);
+        balance!.AmountMinorUnits.Should().Be(5000);
     }
 
     [Fact]
