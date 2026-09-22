@@ -584,6 +584,51 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
 
 
     [Fact]
+    public async Task Api_should_serialize_recoverable_settlement_against_concurrent_original_reversal()
+    {
+        var account = await CreateAccountAsync("Recoverable Reversal Race", 5000);
+
+        var created = await _client.PostAsJsonAsync("/api/operations/recoverable-expense", new
+        {
+            accountId = account.Id,
+            amountMinorUnits = 1000,
+            currency = "EGP",
+            counterpartyName = "Ahmed",
+            effectiveAt = "2026-09-21T10:00:00+03:00",
+            idempotencyKey = "recoverable-reversal-race-original"
+        });
+        created.StatusCode.Should().Be(HttpStatusCode.OK);
+        var original = await created.Content.ReadFromJsonAsync<OperationResponse>();
+        var recoverableId = original!.RecoverableEffects[0].RecoverableId;
+
+        var responses = await Task.WhenAll(
+            _client.PostAsJsonAsync("/api/operations/recoverable-settlement", new
+            {
+                accountId = account.Id,
+                recoverableId,
+                amountMinorUnits = 1000,
+                currency = "EGP",
+                effectiveAt = "2026-09-22T10:00:00+03:00",
+                idempotencyKey = "recoverable-reversal-race-settlement"
+            }),
+            _client.PostAsJsonAsync("/api/operations/reversal", new
+            {
+                originalOperationId = original.Id,
+                effectiveAt = "2026-09-22T10:01:00+03:00",
+                idempotencyKey = "recoverable-reversal-race-reversal"
+            }));
+
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.OK);
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.BadRequest);
+
+        var recoverable = await _client.GetFromJsonAsync<RecoverableResponse>($"/api/recoverables/{recoverableId}");
+        recoverable!.OutstandingMinorUnits.Should().Be(0);
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(5000);
+    }
+
+    [Fact]
     public async Task Api_should_create_obligation_without_changing_account_balance()
     {
         var account = await CreateAccountAsync("Obligation Cash", 5000);
