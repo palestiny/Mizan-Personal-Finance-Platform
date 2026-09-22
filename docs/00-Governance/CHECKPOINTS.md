@@ -257,3 +257,13 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Test:** Added API concurrency coverage using different idempotency keys; exactly one request succeeds, the other is rejected, and the final recoverable/account state remains consistent.
 - **Verification:** GitHub Actions run #158 completed successfully. Build, PostgreSQL migration application, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, Shared Expenses, and Obligations all remained GREEN.
 - **Merge:** PR #21 was squash-merged into `main` at commit `e0f5f3c2850feec850f76da0e88eea3dff18e853`.
+
+
+## CP-019 — M2 Recoverable Balance Rebuild Verification
+- **Status:** Completed, merged, and runtime-verified
+- **Date:** 2026-09-22
+- **Scope:** Close the explicit rebuild-verification gap for recoverable outstanding state.
+- **Invariant:** Recoverable outstanding balance is reconstructible from authoritative immutable Recoverable Effects using deterministic ordering and signed effect magnitudes.
+- **Test:** Added domain verification covering a recoverable expense followed by partial settlement and rebuilding the outstanding amount from the authoritative effect stream.
+- **Verification:** GitHub Actions run #160 completed successfully on the rebuild verification branch.
+- **Merge:** PR #23 was squash-merged into `main` at commit `1127b0d99ba3c56146813d50e4cf36bc16458868`.
