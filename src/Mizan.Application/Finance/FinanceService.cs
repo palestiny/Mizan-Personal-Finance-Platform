@@ -351,6 +351,9 @@ public sealed class FinanceService
     public async Task<Obligation?> GetObligationAsync(Guid obligationId, CancellationToken cancellationToken) =>
         await _repository.GetObligationAsync(obligationId, cancellationToken);
 
+    public async Task<FinancialOperation?> GetOperationAsync(Guid operationId, CancellationToken cancellationToken) =>
+        await _repository.GetOperationAsync(operationId, cancellationToken);
+
     public async Task<IReadOnlyList<FinancialEffect>> GetEffectsAsync(Guid accountId, CancellationToken cancellationToken) =>
         await _repository.GetEffectsAsync(accountId, cancellationToken);
 
