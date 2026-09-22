@@ -59,7 +59,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
         (await _client.PostAsync($"/api/proposals/{proposal!.Id}/reject",null)).StatusCode.Should().Be(HttpStatusCode.OK);
         var confirm=await _client.PostAsJsonAsync($"/api/proposals/{proposal.Id}/confirm",new { commandIdempotencyKey="proposal-reject-confirm" });
         confirm.StatusCode.Should().Be(HttpStatusCode.BadRequest);
-        var balance=await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account}/balance");
+        var balance=await _client.GetFromJsonAsync<BalanceApiResponse>($"/api/accounts/{account}/balance");
         balance!.AmountMinorUnits.Should().Be(1000);
     }
 
@@ -85,7 +85,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
 
         responses.Select(x=>x.StatusCode).Should().Contain(HttpStatusCode.OK);
         responses.Select(x=>x.StatusCode).Should().Contain(HttpStatusCode.Conflict);
-        var balance=await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account}/balance");
+        var balance=await _client.GetFromJsonAsync<BalanceApiResponse>($"/api/accounts/{account}/balance");
         balance!.AmountMinorUnits.Should().Be(10000);
     }
 
