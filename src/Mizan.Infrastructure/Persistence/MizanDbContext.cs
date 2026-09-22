@@ -89,7 +89,7 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.Property(x => x.CreatedAt).IsRequired();
             e.Property(x => x.ExpiresAt).IsRequired();
             e.HasIndex(x => new { x.Status, x.ExpiresAt });
-            e.HasIndex(x => x.CommandIdempotencyKey).IsUnique().HasFilter(\"CommandIdempotencyKey\" IS NOT NULL");
+            e.HasIndex(x => x.CommandIdempotencyKey).IsUnique().HasFilter("\"CommandIdempotencyKey\" IS NOT NULL");
         });
 
         modelBuilder.Entity<IdempotencyRecord>(e =>
