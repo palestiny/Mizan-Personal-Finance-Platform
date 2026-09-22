@@ -106,6 +106,30 @@ public sealed class FinancialFlowApiTests : IClassFixture<WebApplicationFactory<
     }
 
     [Fact]
+    public async Task Api_should_serialize_account_close_against_concurrent_financial_operation()
+    {
+        var account = await CreateAccountAsync("Lifecycle Race", 5000);
+
+        var responses = await Task.WhenAll(
+            _client.PostAsync($"/api/accounts/{account.Id}/close", null),
+            _client.PostAsJsonAsync("/api/operations/income", new
+            {
+                accountId = account.Id,
+                amountMinorUnits = 100,
+                currency = "EGP",
+                effectiveAt = "2026-09-21T10:00:00+03:00",
+                idempotencyKey = "lifecycle-race-income"
+            }));
+
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.OK);
+        responses.Select(x => x.StatusCode).Should().Contain(HttpStatusCode.BadRequest);
+
+        var balance = await _client.GetFromJsonAsync<BalanceResponse>($"/api/accounts/{account.Id}/balance");
+        balance!.AmountMinorUnits.Should().Be(5000);
+        balance.Status.Should().Be("Closed");
+    }
+
+    [Fact]
     public async Task Api_should_reject_normal_operations_on_closed_account_but_keep_balance_readable()
     {
         var account = await CreateAccountAsync("Closed Cash", 1000);

@@ -16,24 +16,48 @@ public sealed class FinanceService
         return account;
     }
 
-    public async Task<Account> CloseAccountAsync(CloseAccountCommand command, CancellationToken cancellationToken)
-    {
-        var account = await _repository.GetAccountAsync(command.AccountId, cancellationToken)
-            ?? throw new DomainValidationException("Account was not found.");
-        account.Close();
-        await _repository.UpdateAccountAsync(account, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return account;
-    }
+    public async Task<Account> CloseAccountAsync(CloseAccountCommand command, CancellationToken cancellationToken) =>
+        await TransitionAccountLifecycleAsync(command.AccountId, reopen: false, cancellationToken);
 
-    public async Task<Account> ReopenAccountAsync(ReopenAccountCommand command, CancellationToken cancellationToken)
+    public async Task<Account> ReopenAccountAsync(ReopenAccountCommand command, CancellationToken cancellationToken) =>
+        await TransitionAccountLifecycleAsync(command.AccountId, reopen: true, cancellationToken);
+
+    private async Task<Account> TransitionAccountLifecycleAsync(Guid accountId, bool reopen, CancellationToken cancellationToken)
     {
-        var account = await _repository.GetAccountAsync(command.AccountId, cancellationToken)
-            ?? throw new DomainValidationException("Account was not found.");
-        account.Reopen();
-        await _repository.UpdateAccountAsync(account, cancellationToken);
-        await _repository.SaveChangesAsync(cancellationToken);
-        return account;
+        Exception? lastFailure = null;
+
+        for (var attempt = 1; attempt <= 3; attempt++)
+        {
+            await _repository.BeginTransactionAsync(cancellationToken, System.Data.IsolationLevel.Serializable);
+            try
+            {
+                var account = await _repository.GetAccountAsync(accountId, cancellationToken)
+                    ?? throw new DomainValidationException("Account was not found.");
+
+                if (reopen)
+                    account.Reopen();
+                else
+                    account.Close();
+
+                await _repository.UpdateAccountAsync(account, cancellationToken);
+                await _repository.SaveChangesAsync(cancellationToken);
+                await _repository.CommitTransactionAsync(cancellationToken);
+                return account;
+            }
+            catch (Exception ex)
+            {
+                lastFailure = ex;
+                await _repository.RollbackTransactionAsync(cancellationToken);
+
+                if (ex is DomainValidationException or IdempotencyConflictException)
+                    throw;
+
+                if (attempt < 3)
+                    continue;
+            }
+        }
+
+        throw lastFailure ?? new InvalidOperationException("Account lifecycle transition failed.");
     }
 
     public async Task<FinancialOperation> AcceptAsync(FinancialOperation.OperationBuilder builder, string idempotencyKey, CancellationToken cancellationToken)
@@ -52,31 +76,42 @@ public sealed class FinanceService
             return existing;
         }
 
-        await ValidateActiveAccountsAsync(operation, cancellationToken);
+        Exception? lastFailure = null;
 
-        await _repository.BeginTransactionAsync(cancellationToken);
-        try
+        for (var attempt = 1; attempt <= 3; attempt++)
         {
-            await _repository.AddAcceptedOperationAsync(operation, idempotencyKey, cancellationToken);
-            await _repository.SaveChangesAsync(cancellationToken);
-            await _repository.CommitTransactionAsync(cancellationToken);
-            return operation;
-        }
-        catch
-        {
-            await _repository.RollbackTransactionAsync(cancellationToken);
-
-            var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
-            if (concurrent is not null)
+            await _repository.BeginTransactionAsync(cancellationToken, System.Data.IsolationLevel.Serializable);
+            try
             {
-                if (!SemanticallyMatches(concurrent, operation))
-                    throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
-
-                return concurrent;
+                await ValidateActiveAccountsAsync(operation, cancellationToken);
+                await _repository.AddAcceptedOperationAsync(operation, idempotencyKey, cancellationToken);
+                await _repository.SaveChangesAsync(cancellationToken);
+                await _repository.CommitTransactionAsync(cancellationToken);
+                return operation;
             }
+            catch (Exception ex)
+            {
+                lastFailure = ex;
+                await _repository.RollbackTransactionAsync(cancellationToken);
 
-            throw;
+                var concurrent = await _repository.GetOperationByIdempotencyKeyAsync(idempotencyKey, cancellationToken);
+                if (concurrent is not null)
+                {
+                    if (!SemanticallyMatches(concurrent, operation))
+                        throw new IdempotencyConflictException("The idempotency key is already associated with a different financial command.");
+
+                    return concurrent;
+                }
+
+                if (ex is DomainValidationException or IdempotencyConflictException)
+                    throw;
+
+                if (attempt < 3)
+                    continue;
+            }
         }
+
+        throw lastFailure ?? new InvalidOperationException("Financial operation acceptance failed.");
     }
 
     public async Task<FinancialOperation> AcceptRecoverableExpenseAsync(AcceptRecoverableExpenseCommand command, CancellationToken cancellationToken) =>
