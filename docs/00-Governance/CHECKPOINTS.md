@@ -247,3 +247,13 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Test:** Added API concurrency test covering two simultaneous settlement requests; exactly one must succeed and the final state must be `Settled`.
 - **Verification:** GitHub Actions run #155 completed successfully. Build, committed EF migration application against PostgreSQL, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, Shared Expenses, and the new concurrent Obligation settlement scenario are GREEN.
 - **Merge:** PR #18 was squash-merged into `main` at commit `1241a1127683c2c2f9146e45ac668c69b516fc1b`.
+
+
+## CP-018 — M2 Recoverable Settlement / Reversal Concurrency Verification
+- **Status:** Completed, merged, and runtime-verified
+- **Date:** 2026-09-22
+- **Scope:** Verify the integrity boundary between settling a recoverable and reversing the operation that created the recoverable.
+- **Invariant:** A recoverable settlement and a reversal of the same recoverable-creating operation cannot both commit when they race concurrently.
+- **Test:** Added API concurrency coverage using different idempotency keys; exactly one request succeeds, the other is rejected, and the final recoverable/account state remains consistent.
+- **Verification:** GitHub Actions run #158 completed successfully. Build, PostgreSQL migration application, Domain, Application, existing financial/idempotency/concurrency/balance/reversal coverage, Account Lifecycle, Recoverables, Shared Expenses, and Obligations all remained GREEN.
+- **Merge:** PR #21 was squash-merged into `main` at commit `e0f5f3c2850feec850f76da0e88eea3dff18e853`.
