@@ -58,6 +58,35 @@ Verified in that run:
 - settled-recoverable reversal protection
 - settlement-before-reversal ordering
 
+## M3 Proposal-first Capture — First Vertical Slice
+
+- DG-018 Natural-Language Capture is accepted with Proposal-first confirmation.
+- DG-019 Proposal Model & Lifecycle is accepted with persisted, non-authoritative Proposal state.
+- First runtime slice is implemented and runtime-verified without an AI/LLM provider.
+- Proposal lifecycle is persisted as Draft / ReadyForConfirmation / Confirmed with Rejected / Expired / Failed terminal states.
+- Confirmation reuses the existing Financial Command idempotency boundary; Proposal confirmation cannot create Effects directly.
+- Concurrent confirmation cannot create duplicate authoritative Operations.
+- PostgreSQL migration, API lifecycle, confirmation path, retry semantics, rejection behavior, and concurrency verification are covered by automated tests.
+- Exact expiration TTL remains deferred to UX/implementation evidence.
+- Capture interpretation remains vendor-neutral; AI/OCR/voice/import adapters are not introduced in this slice.
+
+## Verification
+
+GitHub Actions run **#189** completed successfully after the M3 Proposal vertical slice implementation and verification.
+
+Verified:
+- Build
+- Committed PostgreSQL EF migration application
+- Domain tests
+- Application Proposal lifecycle tests
+- Existing financial/application test coverage
+- Proposal create/read/prepare/reject/confirm API paths
+- Proposal confirmation through existing financial command execution
+- Same-Proposal confirmation retry semantics
+- Concurrent confirmation with different idempotency keys
+- Rejection and incomplete Proposal behavior
+- No AI/LLM provider dependency
+
 ## Next action
 
-M2 recovery/rebuild verification is now GREEN for both Account balances and Recoverable outstanding state. M2 exit audit is GREEN. The core financial state is correct, explainable, recoverable, and tested. The next phase is M3 — Frictionless Capture; any material product/domain decision must open an explicit design gate before implementation.
+M3 Proposal-first capture boundary is now runtime-verified. The next slice is the **capture interpreter adapter**: convert a user input into a vendor-neutral Proposal without allowing interpretation to mutate authoritative financial state. Any new material product/domain semantics must open an explicit design gate before implementation.
