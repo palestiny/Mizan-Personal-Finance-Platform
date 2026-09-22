@@ -10,6 +10,7 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
     public DbSet<RecoverableEffectRecord> RecoverableEffects => Set<RecoverableEffectRecord>();
     public DbSet<IdempotencyRecord> IdempotencyKeys => Set<IdempotencyRecord>();
     public DbSet<ObligationRecord> Obligations => Set<ObligationRecord>();
+    public DbSet<ProposalRecord> Proposals => Set<ProposalRecord>();
 
     protected override void OnModelCreating(ModelBuilder modelBuilder)
     {
@@ -72,6 +73,23 @@ public sealed class MizanDbContext(DbContextOptions<MizanDbContext> options) : D
             e.Property(x => x.CreatedAt).IsRequired();
             e.Property(x => x.Status).IsRequired();
             e.HasIndex(x => new { x.Status, x.DueAt });
+        });
+
+        modelBuilder.Entity<ProposalRecord>(e =>
+        {
+            e.ToTable("capture_proposals");
+            e.HasKey(x => x.Id);
+            e.Property(x => x.OriginalInput).HasMaxLength(4000).IsRequired();
+            e.Property(x => x.OperationType).IsRequired();
+            e.Property(x => x.Currency).HasMaxLength(3);
+            e.Property(x => x.MissingFields).HasMaxLength(4000);
+            e.Property(x => x.Ambiguities).HasMaxLength(4000);
+            e.Property(x => x.InterpretationMetadata).HasMaxLength(8000);
+            e.Property(x => x.Status).IsRequired();
+            e.Property(x => x.CreatedAt).IsRequired();
+            e.Property(x => x.ExpiresAt).IsRequired();
+            e.HasIndex(x => new { x.Status, x.ExpiresAt });
+            e.HasIndex(x => x.CommandIdempotencyKey).IsUnique().HasFilter("\"CommandIdempotencyKey\" IS NOT NULL");
         });
 
         modelBuilder.Entity<IdempotencyRecord>(e =>
@@ -147,4 +165,26 @@ public sealed class ObligationRecord
     public DateTimeOffset DueAt { get; set; }
     public DateTimeOffset CreatedAt { get; set; }
     public int Status { get; set; }
+}
+
+public sealed class ProposalRecord
+{
+    public Guid Id { get; set; }
+    public string OriginalInput { get; set; } = "";
+    public int OperationType { get; set; }
+    public Guid? AccountId { get; set; }
+    public Guid? DestinationAccountId { get; set; }
+    public long? AmountMinorUnits { get; set; }
+    public string? Currency { get; set; }
+    public DateTimeOffset? EffectiveAt { get; set; }
+    public string? MissingFields { get; set; }
+    public string? Ambiguities { get; set; }
+    public string? InterpretationMetadata { get; set; }
+    public int Status { get; set; }
+    public DateTimeOffset CreatedAt { get; set; }
+    public DateTimeOffset ExpiresAt { get; set; }
+    public DateTimeOffset? ConfirmedAt { get; set; }
+    public DateTimeOffset? RejectedAt { get; set; }
+    public string? CommandIdempotencyKey { get; set; }
+    public Guid? OperationId { get; set; }
 }

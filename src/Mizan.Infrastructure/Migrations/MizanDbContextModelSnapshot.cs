@@ -118,7 +118,34 @@ namespace Mizan.Infrastructure.Migrations
             {
                 b.HasOne("Mizan.Infrastructure.Persistence.OperationRecord", null).WithMany().HasForeignKey("OperationId").OnDelete(DeleteBehavior.Restrict).IsRequired();
             });
+            modelBuilder.Entity("Mizan.Infrastructure.Persistence.ProposalRecord", b =>
+            {
+                b.Property<Guid>("Id").ValueGeneratedOnAdd().HasColumnType("uuid");
+                b.Property<Guid?>("AccountId").HasColumnType("uuid");
+                b.Property<long?>("AmountMinorUnits").HasColumnType("bigint");
+                b.Property<string>("OriginalInput").IsRequired().HasMaxLength(4000).HasColumnType("character varying(4000)");
+                b.Property<Guid?>("DestinationAccountId").HasColumnType("uuid");
+                b.Property<DateTimeOffset?>("EffectiveAt").HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset>("ExpiresAt").HasColumnType("timestamp with time zone");
+                b.Property<string?>("Currency").HasMaxLength(3).HasColumnType("character varying(3)");
+                b.Property<string?>("MissingFields").HasMaxLength(4000).HasColumnType("character varying(4000)");
+                b.Property<string?>("Ambiguities").HasMaxLength(4000).HasColumnType("character varying(4000)");
+                b.Property<string?>("InterpretationMetadata").HasMaxLength(8000).HasColumnType("character varying(8000)");
+                b.Property<int>("OperationType").HasColumnType("integer");
+                b.Property<int>("Status").HasColumnType("integer");
+                b.Property<DateTimeOffset>("CreatedAt").HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset?>("ConfirmedAt").HasColumnType("timestamp with time zone");
+                b.Property<DateTimeOffset?>("RejectedAt").HasColumnType("timestamp with time zone");
+                b.Property<string?>("CommandIdempotencyKey").HasColumnType("text");
+                b.Property<Guid?>("OperationId").HasColumnType("uuid");
+                b.HasKey("Id");
+                b.HasIndex("CommandIdempotencyKey").IsUnique().HasFilter("\"CommandIdempotencyKey\" IS NOT NULL");
+                b.HasIndex("Status", "ExpiresAt");
+                b.ToTable("capture_proposals", (string)null);
+            });
+
 #pragma warning restore 612, 618
         }
+
     }
 }
