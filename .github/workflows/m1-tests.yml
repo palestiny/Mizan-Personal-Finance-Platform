@@ -39,7 +39,19 @@ jobs:
       - name: Install EF Core CLI
         run: dotnet tool install --global dotnet-ef --version 8.0.20
       - name: Build
-        run: dotnet build Mizan.sln --configuration Release --no-restore
+        shell: bash
+        run: |
+          set +e
+          dotnet build Mizan.sln --configuration Release --no-restore > build.log 2>&1
+          code=$?
+          cat build.log
+          exit $code
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: m3-build-log
+          path: build.log
       - name: Apply committed EF Core migrations
         run: dotnet ef database update --project src/Mizan.Infrastructure --startup-project src/Mizan.Api --configuration Release --no-build
       - name: Test — Domain
