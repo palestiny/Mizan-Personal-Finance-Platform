@@ -73,17 +73,5 @@ jobs:
         run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~Api_should_create_obligation_without_changing_account_balance|FullyQualifiedName~Api_should_settle_and_cancel_obligations_without_creating_financial_effects|FullyQualifiedName~Api_should_reject_duplicate_obligation_lifecycle_transition|FullyQualifiedName~Api_should_allow_only_one_concurrent_obligation_settlement"
 
       - name: Test — API — Proposals
-        shell: bash
-        run: |
-          set +e
-          dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~ProposalApiTests" > proposal-test.log 2>&1
-          code=$?
-          cat proposal-test.log
-          exit $code
-      - name: Upload proposal test log on failure
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: m3-proposal-test-log
-          path: proposal-test.log
+        run: dotnet test tests/Mizan.Api.Tests/Mizan.Api.Tests.csproj --configuration Release --no-restore --no-build --filter "FullyQualifiedName~ProposalApiTests"
 
