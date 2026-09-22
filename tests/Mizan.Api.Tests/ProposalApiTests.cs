@@ -33,8 +33,8 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
 
         var confirm=await _client.PostAsJsonAsync($"/api/proposals/{proposal.Id}/confirm",new { commandIdempotencyKey="proposal-income-confirm-1" });
         confirm.StatusCode.Should().Be(HttpStatusCode.OK);
-        var operation=await confirm.Content.ReadFromJsonAsync<OperationResponse>();
-        operation!.Type.Should().Be(FinancialOperationType.Income);
+        var operation=await confirm.Content.ReadFromJsonAsync<ProposalOperationResponse>();
+        operation!.Type.Should().Be("Income");
 
         var read=await _client.GetFromJsonAsync<ProposalApiResponse>($"/api/proposals/{proposal.Id}");
         read!.Status.Should().Be("Confirmed");
@@ -158,3 +158,5 @@ public sealed record ProposalApiResponse(Guid Id,string OriginalInput,string Ope
 public sealed record AccountApiResponse(Guid Id,string Name,string Type,string Currency,string Status);
 
 public sealed record BalanceApiResponse(long AmountMinorUnits, string Status);
+
+public sealed record ProposalOperationResponse(Guid Id,string Type);
