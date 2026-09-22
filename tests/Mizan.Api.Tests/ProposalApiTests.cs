@@ -3,6 +3,7 @@ using Microsoft.AspNetCore.Mvc.Testing;
 using System.Net;
 using System.Net.Http.Json;
 using Xunit;
+using Mizan.Domain.Finance;
 
 namespace Mizan.Api.Tests;
 
@@ -33,7 +34,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
         var confirm=await _client.PostAsJsonAsync($"/api/proposals/{proposal.Id}/confirm",new { commandIdempotencyKey="proposal-income-confirm-1" });
         confirm.StatusCode.Should().Be(HttpStatusCode.OK);
         var operation=await confirm.Content.ReadFromJsonAsync<OperationResponse>();
-        operation!.Type.Should().Be("Income");
+        operation!.Type.Should().Be(FinancialOperationType.Income);
 
         var read=await _client.GetFromJsonAsync<ProposalApiResponse>($"/api/proposals/{proposal.Id}");
         read!.Status.Should().Be("Confirmed");
@@ -116,3 +117,5 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
 
 public sealed record ProposalApiResponse(Guid Id,string OriginalInput,string OperationType,Guid? AccountId,Guid? DestinationAccountId,long? AmountMinorUnits,string? Currency,DateTimeOffset? EffectiveAt,string? MissingFields,string? Ambiguities,string? InterpretationMetadata,string Status,DateTimeOffset CreatedAt,DateTimeOffset ExpiresAt,DateTimeOffset? ConfirmedAt,DateTimeOffset? RejectedAt,string? CommandIdempotencyKey,Guid? OperationId);
 public sealed record AccountApiResponse(Guid Id,string Name,string Type,string Currency,string Status);
+
+public sealed record BalanceApiResponse(long AmountMinorUnits, string Status);
