@@ -1,6 +1,6 @@
 # DG-018 — M3 Natural-Language Capture Design Gate
 
-Status: Proposed — awaiting Product Owner decision
+Status: Accepted — Option B: Proposal-first confirmation
 Phase: M3 — Frictionless Capture
 Date: 2026-09-22
 
@@ -49,9 +49,20 @@ Advantages: smallest immediate engineering scope and no interpretation uncertain
 Trade-offs: delays the highest-friction reduction proposed by M3 and gives less evidence about natural-language value.
 Assessment: viable if product validation prioritizes deterministic structured capture.
 
-## Decision required
+## Decision
 
-The Product Owner should choose A, B, or C. If B is selected, the next gate must define the Proposal model and lifecycle before implementation.
+**Product Owner decision: Option B — Proposal-first confirmation.**
+
+Accepted flow: Input → interpretation → Proposal → user confirmation → existing financial command → Operation + Effect.
+
+The Proposal remains non-authoritative. Confirmation must re-enter the existing authoritative financial command path; the capture layer cannot create Effects directly.
+
+### Rejected alternatives
+- Option A — Direct interpretation into financial command: rejected for the first M3 slice because it weakens the M2 trust boundary.
+- Option C — Structured capture only: deferred; it may be revisited if product validation shows natural-language capture does not justify its confirmation/interpretation cost.
+
+### Next gate
+DG-019 must define the Proposal model and lifecycle before runtime implementation begins.
 
 ## Proposed M3 first-slice exit criteria
 1. User input can be submitted without directly mutating financial state.
