@@ -37,7 +37,7 @@ Mizan's authoritative financial model is **Operation + Effect**. Only accepted i
 
 ## Verification
 
-GitHub Actions run **#151** completed successfully after the final concurrency-safe shared-expense reversal hardening.
+GitHub Actions run **#158** completed successfully after the recoverable settlement vs. original reversal concurrency verification.
 
 Verified in that run:
 - Build
@@ -50,6 +50,7 @@ Verified in that run:
 - Recoverable concurrent over-settlement protection
 - Recoverable over-settlement rejection
 - Recoverable expense reversal
+- Recoverable settlement vs. original-operation reversal concurrency protection
 - Shared Expense creation and account/recoverable effects
 - Shared Expense idempotent retry
 - invalid recoverable portion rejection
@@ -58,4 +59,4 @@ Verified in that run:
 
 ## Next action
 
-M2 Obligations is GREEN and merged. Continue M2 by identifying the next concrete capability from the accepted roadmap. Open a new design gate only if the next capability introduces a material product, domain, or architecture decision.
+M2 integrity hardening is GREEN through the verified recoverable settlement/reversal race. Continue M2 by identifying the next concrete capability from the accepted roadmap. Open a new design gate only if the next capability introduces a material product, domain, or architecture decision.
