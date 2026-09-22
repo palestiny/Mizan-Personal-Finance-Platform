@@ -276,3 +276,15 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Result:** GREEN. Core financial state is correct, explainable, recoverable, and tested.
 - **Evidence:** M2-EXIT-AUDIT.md; CI runs #158, #160, and #161; merged M2 implementation and verification PRs.
 - **Decision:** M2 is complete. M3 — Frictionless Capture is the next roadmap phase.
+
+
+## CP-021 — M3 Natural-Language Capture Boundary
+- **Status:** Completed — Product Owner decision accepted
+- **Date:** 2026-09-22
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-018 Natural-Language Capture
+- **Decision:** Option B — Proposal-first confirmation.
+- **Accepted boundary:** User input → interpretation → non-authoritative Proposal → user confirmation → existing financial command → Operation + Effect.
+- **Invariant:** Capture interpretation and AI/parser output cannot directly create authoritative financial state.
+- **Rejected/deferred:** Direct interpretation into financial commands (Option A) rejected for the first M3 slice; structured-only capture (Option C) deferred pending product evidence.
+- **Next:** DG-019 Proposal Model & Lifecycle before runtime implementation.
