@@ -20,7 +20,8 @@ public sealed class ProposalTests
     {
         var p=Proposal.Create("دفع بنزين",ProposalOperationType.PersonalExpense,null,null,null,null,null,"Amount,Account",null,null,DateTimeOffset.UtcNow.AddHours(1));
         p.Status.Should().Be(ProposalStatus.Draft);
-        p.Prepare.Should().Throw<DomainValidationException>();
+        var action=()=>p.Prepare();
+        action.Should().Throw<DomainValidationException>();
     }
 
     [Fact]
