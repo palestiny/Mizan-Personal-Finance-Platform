@@ -300,3 +300,17 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Invariants:** Proposal confirmation cannot directly create Effects; unresolved proposals cannot mutate authoritative financial state; concurrent confirmation cannot create duplicate authoritative Operations.
 - **Deferred:** Exact expiration TTL until UX/implementation evidence.
 - **Next:** Implement the vendor-neutral Proposal service/API and tests before adding a specific capture interpreter.
+
+
+## CP-023 — M3 Proposal-first Capture Vertical Slice
+- **Status:** Completed, merged, and runtime-verified
+- **Date:** 2026-09-22
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-019 Proposal Model & Lifecycle
+- **Scope:** First vendor-neutral runtime slice for persisted Proposal capture and safe confirmation.
+- **Implemented:** persisted Proposal model and lifecycle, PostgreSQL migration, capture persistence adapter, API create/read/prepare/reject/expire/confirm paths, confirmation through the existing Financial Command idempotency boundary, and automated Domain/Application/API verification.
+- **Invariant:** Proposal state is non-authoritative; confirmation cannot directly create Effects; concurrent confirmation cannot create duplicate authoritative Operations.
+- **Verification:** GitHub Actions run #189 completed successfully. Proposal API verification passed, including create/inspect/confirm, rejection without financial mutation, incomplete Proposal handling, same-Proposal confirmation retry, and concurrent confirmation protection.
+- **Hardening:** migration discovery metadata was corrected after runtime verification identified that the new migration was not being applied; the final run verified the registered migration and Proposal persistence path.
+- **Decision:** DG-019 runtime boundary is implemented and verified. No AI/LLM provider is introduced.
+- **Next:** Capture interpreter adapter, remaining vendor-neutral and non-authoritative.
