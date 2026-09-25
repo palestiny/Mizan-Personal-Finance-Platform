@@ -302,6 +302,19 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Next:** Implement the vendor-neutral Proposal service/API and tests before adding a specific capture interpreter.
 
 
+## CP-024 — M3 Capture Interpretation Boundary
+- **Status:** Completed, merged, and runtime-verified
+- **Date:** 2026-09-25
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-020 Capture Interpretation Boundary
+- **Product Owner decision:** Option B — vendor-neutral interpretation plus deterministic context resolution.
+- **Implemented:** raw capture contract, vendor-neutral interpretation, deterministic semantic account resolution, explicit missing/ambiguity handling, Proposal materialization, and application tests.
+- **Invariant:** the interpreter never owns authoritative AccountIds and cannot create financial Effects; unresolved or ambiguous context remains non-confirmable.
+- **Verification:** PR #32 was merged after implementation verification. PR #33 fixed the API status contract and date-sensitive Proposal API fixtures; GitHub Actions run #194 completed successfully. PR #33 was then merged.
+- **Root-cause fix:** the earlier API `status` deserialization failure was traced to stale hard-coded expiration dates causing HTTP 400 ProblemDetails, not to the response DTO change itself. Tests now use a future expiration for non-expiration scenarios.
+- **Merge:** PR #32 merged at `e9c206df34d5758e78163312cf51533efe64efe1`; PR #33 merged at `93a4e090c60843ffc8da11a0394a24cf78cf50e8`.
+- **Next:** proceed to the next M3 design gate; AI/OCR/voice provider integration remains out of the financial core.
+
 ## CP-023 — M3 Proposal-first Capture Vertical Slice
 - **Status:** Completed, merged, and runtime-verified
 - **Date:** 2026-09-22
