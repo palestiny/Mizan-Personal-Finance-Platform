@@ -24,7 +24,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
             amountMinorUnits=800000,
             currency="EGP",
             effectiveAt="2026-09-22T10:00:00+03:00",
-            expiresAt="2026-09-23T10:00:00+03:00"
+            expiresAt=FutureExpiration()
         });
         create.StatusCode.Should().Be(HttpStatusCode.Created);
         var proposal=await create.Content.ReadFromJsonAsync<ProposalApiResponse>();
@@ -53,7 +53,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
             amountMinorUnits=50000,
             currency="EGP",
             effectiveAt="2026-09-22T10:00:00+03:00",
-            expiresAt="2026-09-23T10:00:00+03:00"
+            expiresAt=FutureExpiration()
         });
         var proposal=await create.Content.ReadFromJsonAsync<ProposalApiResponse>();
         (await _client.PostAsync($"/api/proposals/{proposal!.Id}/reject",null)).StatusCode.Should().Be(HttpStatusCode.OK);
@@ -75,7 +75,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
             amountMinorUnits=10000,
             currency="EGP",
             effectiveAt="2026-09-22T10:00:00+03:00",
-            expiresAt="2026-09-23T10:00:00+03:00"
+            expiresAt=FutureExpiration()
         });
         var proposal=await create.Content.ReadFromJsonAsync<ProposalApiResponse>();
 
@@ -97,7 +97,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
             originalInput="دفعت بنزين",
             operationType="PersonalExpense",
             missingFields="Amount,Account",
-            expiresAt="2026-09-23T10:00:00+03:00"
+            expiresAt=FutureExpiration()
         });
         create.StatusCode.Should().Be(HttpStatusCode.Created);
         var proposal=await create.Content.ReadFromJsonAsync<ProposalApiResponse>();
@@ -118,7 +118,7 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
             amountMinorUnits=20000,
             currency="EGP",
             effectiveAt="2026-09-22T10:00:00+03:00",
-            expiresAt="2026-09-23T10:00:00+03:00"
+            expiresAt=FutureExpiration()
         });
         var proposal=await create.Content.ReadFromJsonAsync<ProposalApiResponse>();
         var first=await _client.PostAsJsonAsync($"/api/proposals/{proposal!.Id}/confirm",new { commandIdempotencyKey="proposal-retry-key" });
@@ -144,6 +144,8 @@ public sealed class ProposalApiTests : IClassFixture<WebApplicationFactory<Progr
         });
         create.StatusCode.Should().Be(HttpStatusCode.BadRequest);
     }
+
+    private static DateTimeOffset FutureExpiration() => DateTimeOffset.UtcNow.AddHours(1);
 
     private async Task<Guid> CreateAccountAsync(string name,long opening=0)
     {
