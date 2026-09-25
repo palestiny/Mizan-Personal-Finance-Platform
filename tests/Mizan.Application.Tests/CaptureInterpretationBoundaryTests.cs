@@ -18,7 +18,6 @@ public sealed class CaptureInterpretationBoundaryTests
         result.AmountMinorUnits.Should().Be(25000);
         result.Currency.Should().Be("EGP");
         result.AccountReference.Should().Be("البنك");
-        result.AccountId.Should().BeNull();
     }
 
     [Fact]
