@@ -29,8 +29,6 @@ public sealed record CaptureInterpretation(
         : this(operationType, amountMinorUnits, currency, effectiveAt, accountReference, null, missingFields, ambiguities)
     {
     }
-
-    public Guid? AccountId { get; init; }
 }
 
 public interface ICaptureInterpreter
