@@ -262,9 +262,9 @@ public partial class Program { }
 
 public sealed record CreateProposalRequest(string OriginalInput, ProposalOperationType OperationType, Guid? AccountId, Guid? DestinationAccountId, long? AmountMinorUnits, string? Currency, DateTimeOffset? EffectiveAt, string? MissingFields, string? Ambiguities, string? InterpretationMetadata, DateTimeOffset ExpiresAt);
 public sealed record ConfirmProposalRequest(string CommandIdempotencyKey);
-public sealed record ProposalResponse(Guid Id,string OriginalInput,ProposalOperationType OperationType,Guid? AccountId,Guid? DestinationAccountId,long? AmountMinorUnits,string? Currency,DateTimeOffset? EffectiveAt,string? MissingFields,string? Ambiguities,string? InterpretationMetadata,ProposalStatus Status,DateTimeOffset CreatedAt,DateTimeOffset ExpiresAt,DateTimeOffset? ConfirmedAt,DateTimeOffset? RejectedAt,string? CommandIdempotencyKey,Guid? OperationId)
+public sealed record ProposalResponse(Guid Id,string OriginalInput,ProposalOperationType OperationType,Guid? AccountId,Guid? DestinationAccountId,long? AmountMinorUnits,string? Currency,DateTimeOffset? EffectiveAt,string? MissingFields,string? Ambiguities,string? InterpretationMetadata,string Status,DateTimeOffset CreatedAt,DateTimeOffset ExpiresAt,DateTimeOffset? ConfirmedAt,DateTimeOffset? RejectedAt,string? CommandIdempotencyKey,Guid? OperationId)
 {
-    public static ProposalResponse From(Proposal p)=>new(p.Id,p.OriginalInput,p.OperationType,p.AccountId,p.DestinationAccountId,p.AmountMinorUnits,p.Currency,p.EffectiveAt,p.MissingFields,p.Ambiguities,p.InterpretationMetadata,p.Status,p.CreatedAt,p.ExpiresAt,p.ConfirmedAt,p.RejectedAt,p.CommandIdempotencyKey,p.OperationId);
+    public static ProposalResponse From(Proposal p)=>new(p.Id,p.OriginalInput,p.OperationType,p.AccountId,p.DestinationAccountId,p.AmountMinorUnits,p.Currency,p.EffectiveAt,p.MissingFields,p.Ambiguities,p.InterpretationMetadata,p.Status.ToString(),p.CreatedAt,p.ExpiresAt,p.ConfirmedAt,p.RejectedAt,p.CommandIdempotencyKey,p.OperationId);
 }
 
 public sealed record CreateObligationRequest(string Description, long AmountMinorUnits, string Currency, DateTimeOffset DueAt);
