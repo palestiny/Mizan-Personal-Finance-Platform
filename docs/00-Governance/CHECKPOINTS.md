@@ -327,3 +327,17 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Hardening:** migration discovery metadata was corrected after runtime verification identified that the new migration was not being applied; the final run verified the registered migration and Proposal persistence path.
 - **Decision:** DG-019 runtime boundary is implemented and verified. No AI/LLM provider is introduced.
 - **Next:** Capture interpreter adapter, remaining vendor-neutral and non-authoritative.
+
+## CP-025 — M3 Capture Provider Adapter Boundary
+- **Status:** Completed — Product Owner decision accepted
+- **Date:** 2026-09-26
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-021 Capture Provider Adapter Boundary
+- **Decision:** Option B — provider adapters return validated vendor-neutral interpretation candidates; they do not return Proposals or financial commands.
+- **Accepted boundary:** provider-specific SDKs remain outside Domain and Proposal persistence; provider output is untrusted and structurally/domain validated before Proposal materialization; semantic account references only cross the provider boundary; deterministic application-owned resolution remains authoritative.
+- **Failure policy:** provider timeout, rejection, rate limit, malformed output, schema mismatch, or unavailable provider fails closed before Proposal creation. No provider failure may create authoritative financial state.
+- **Uncertainty policy:** provider confidence is diagnostic only and cannot authorize execution; missing, ambiguous, or conflicting interpretation remains non-authoritative.
+- **OCR/voice:** channel adapters converge on the same financial interpretation boundary; media preprocessing remains separate infrastructure and receives its own gate only if requirements materially exceed this boundary.
+- **Diagnostics:** transient in the first implementation; persistence deferred until product/UX evidence requires it.
+- **Verification:** DG-021 documentation accepted and merged through PR #35 at `abf4d897143e126078ee2fe9c03c99ae2ce66169`. PR #34 was closed because it was a draft; no implementation code was introduced.
+- **Next:** implement the accepted provider adapter boundary with TDD; deterministic fake/provider first, then one real integration adapter after GREEN.
