@@ -1,6 +1,6 @@
 # DG-021 — M3 Capture Provider Adapter Boundary
 
-Status: Proposed — Product Owner decision required
+Status: Accepted — Product Owner decision
 Phase: M3 — Frictionless Capture
 Date: 2026-09-26
 
@@ -56,7 +56,7 @@ Advantages: preserves DG-020 unchanged, keeps providers replaceable, keeps valid
 
 Costs: requires an adapter contract, explicit diagnostics/validation semantics, and provider-specific infrastructure implementations.
 
-Assessment: Recommended.
+Assessment: Accepted.
 
 ### Option C — Provider returns only extracted fields; a separate interpreter assembles semantics
 
