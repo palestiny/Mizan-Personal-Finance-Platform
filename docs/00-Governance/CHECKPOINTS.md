@@ -352,3 +352,14 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Failure policy:** provider failure or invalid output is rejected before financial authority; confidence is diagnostic only.
 - **Verification:** PR #36 merged to main at `ec8c1dfd66185f3796e0bd9a323e4d155fdf3f01`. No real AI/OCR/voice vendor was introduced.
 - **Next:** run/verify the repository CI for the merged implementation, then design the first real provider integration boundary rather than coupling the core directly to a vendor SDK.
+
+## CP-027 — M3 Provider Capture Proposal Orchestration
+- **Status:** Completed and merged
+- **Date:** 2026-09-26
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-021 Capture Provider Adapter Boundary
+- **Implemented:** application orchestration from validated provider interpretation through deterministic context resolution into a non-authoritative Proposal.
+- **Failure policy verified by tests:** provider failure and invalid provider output stop before Proposal creation; unknown/ambiguous semantic references remain Draft/unresolved.
+- **Invariant:** no Financial Operation or Effect is created by the provider capture path; the existing Financial Command remains the authoritative execution boundary.
+- **Verification:** PR #37 merged to main at `fb75e77b484abd38687104a8d61b59878f865931`. GitHub did not expose a workflow/status run for the head commit before merge, so CI GREEN is not claimed from connector evidence alone.
+- **Next:** design the real provider integration gate, including provider selection criteria, SDK isolation, timeout/retry policy, schema/versioning, privacy/data handling, and operational failure semantics. No vendor is selected yet.
