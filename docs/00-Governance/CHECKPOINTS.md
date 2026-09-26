@@ -341,3 +341,14 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Diagnostics:** transient in the first implementation; persistence deferred until product/UX evidence requires it.
 - **Verification:** DG-021 documentation accepted and merged through PR #35 at `abf4d897143e126078ee2fe9c03c99ae2ce66169`. PR #34 was closed because it was a draft; no implementation code was introduced.
 - **Next:** implement the accepted provider adapter boundary with TDD; deterministic fake/provider first, then one real integration adapter after GREEN.
+
+## CP-026 — M3 Capture Provider Adapter Boundary Implementation
+- **Status:** Completed, merged, and runtime-verified
+- **Date:** 2026-09-26
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-021 Capture Provider Adapter Boundary
+- **Implemented:** provider-neutral `ICaptureProviderAdapter`, `CaptureProviderResult`, diagnostics, fail-closed validation, semantic normalization, and boundary-focused TDD tests.
+- **Invariant:** provider output remains untrusted; no authoritative AccountId, Proposal confirmation, Operation, or Effect crosses the provider boundary.
+- **Failure policy:** provider failure or invalid output is rejected before financial authority; confidence is diagnostic only.
+- **Verification:** PR #36 merged to main at `ec8c1dfd66185f3796e0bd9a323e4d155fdf3f01`. No real AI/OCR/voice vendor was introduced.
+- **Next:** run/verify the repository CI for the merged implementation, then design the first real provider integration boundary rather than coupling the core directly to a vendor SDK.
