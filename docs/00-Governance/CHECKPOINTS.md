@@ -363,3 +363,14 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Invariant:** no Financial Operation or Effect is created by the provider capture path; the existing Financial Command remains the authoritative execution boundary.
 - **Verification:** PR #37 merged to main at `fb75e77b484abd38687104a8d61b59878f865931`. GitHub did not expose a workflow/status run for the head commit before merge, so CI GREEN is not claimed from connector evidence alone.
 - **Next:** design the real provider integration gate, including provider selection criteria, SDK isolation, timeout/retry policy, schema/versioning, privacy/data handling, and operational failure semantics. No vendor is selected yet.
+
+## CP-028 — M3 Real Capture Provider Integration Boundary
+- **Status:** Completed and accepted
+- **Date:** 2026-09-26
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-022 Real Capture Provider Integration Boundary
+- **Decision:** Option B — Infrastructure adapter behind the provider-neutral capture contract.
+- **Binding rules:** provider output remains untrusted; provider SDKs stay outside Domain/Proposal persistence; validation precedes deterministic context resolution; provider failures and invalid output fail closed before Proposal creation; bounded transient retries only; sensitive/raw provider data is not persisted or logged by default; confidence remains diagnostic only; automatic multi-provider fallback is deferred.
+- **Verification:** DG-022 proposal PR #38 was merged to main at `af90ec3783788964d8a37451e1e5f6848cfa176f`; acceptance update committed at `cfedcde36970dd13b2f3d9d26e58c811cebb758e`.
+- **Important caveat:** no real vendor has been selected or integrated. Vendor selection requires separate evidence-based evaluation.
+- **Next:** implement the real provider adapter boundary with TDD, using a deterministic fake and provider contract tests before selecting/integrating a production vendor.
