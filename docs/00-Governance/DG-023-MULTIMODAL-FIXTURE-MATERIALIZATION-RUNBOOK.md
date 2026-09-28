@@ -41,7 +41,7 @@ The next materialization step is:
 6. record the tool/version and fixture hash;
 7. update fixture_ref only if the repository path changes.
 
-The rasterization tool is a benchmark-preparation dependency, not an application runtime dependency. The repository now contains `tools/benchmarks/capture/materialize-receipts.ps1`, which requires an explicitly supplied `rsvg-convert` version, rasterizes the 20 SVG sources to PNG, records SHA-256 and tool provenance, and writes preparation evidence under `artifacts/`. It does not claim provider-execution evidence by itself and does not invent degradation beyond what is declared by the manifest.
+The materialization tool is a benchmark-preparation dependency, not an application runtime dependency. The repository contains `tools/benchmarks/capture/materialize-receipts.ps1`, which requires explicitly supplied `rsvg-convert` and ImageMagick versions. `rsvg-convert` performs the SVG-to-PNG rasterization; ImageMagick applies the manifest-declared deterministic transformations: blur, top crop, shear/skew, localized bright glare, and low-contrast adjustment. ImageMagick supports these operations through its command-line image-processing operators. citeturn1search0turn1search4 The script records SHA-256 and tool provenance and writes preparation evidence under `artifacts/`. It does not claim provider-execution evidence by itself.
 
 ### Receipt acceptance
 
