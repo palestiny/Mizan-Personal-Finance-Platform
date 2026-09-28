@@ -70,7 +70,7 @@ function Apply-Degradation([string]$InputPath, [string]$OutputPath, [object[]]$D
                     "-alpha", "on",
                     "-fill", "rgba(255,255,255,0.58)",
                     "-stroke", "none",
-                    "-draw", "ellipse 55% 38% 24% 13% 0,360"
+                    "-gravity", "Center", "-draw", "ellipse 0,0 180,90 0,360"
                 )
             }
             "low_contrast" {
