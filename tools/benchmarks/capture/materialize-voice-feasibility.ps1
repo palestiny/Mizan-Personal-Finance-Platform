@@ -27,8 +27,8 @@ $outDir = Resolve-RepoPath $OutputDirectory
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
 $manifest = Get-Content -Raw -Path $manifestPath | ConvertFrom-Json
-if ($manifest.schema_version_version -ne "m3-capture-voice-benchmark-v1") {
-    throw "Unsupported voice benchmark schema: $($manifest.schema)"
+if ($manifest.schema_version -ne "m3-capture-voice-benchmark-v1") {
+    throw "Unsupported voice benchmark schema: $($manifest.schema_version)"
 }
 
 $caseIds = @("VOICE-001", "VOICE-002", "VOICE-004")
@@ -91,7 +91,7 @@ def main():
     }
 
     for case in cases:
-        case_id = case["case_id"]
+        case_id = case["id"]
         transcript = case["transcript_hint"]
         output_path = os.path.join(args.output, case_id + ".wav")
 
