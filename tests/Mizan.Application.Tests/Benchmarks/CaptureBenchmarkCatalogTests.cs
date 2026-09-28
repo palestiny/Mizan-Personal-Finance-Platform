@@ -51,6 +51,93 @@ public sealed class CaptureBenchmarkCatalogTests
 
         action.Should().Throw<InvalidOperationException>().WithMessage("*future-version*");
     }
+    [Fact]
+    public void Catalog_rejects_duplicate_case_ids()
+    {
+        const string json = """
+        {
+          "schema_version": "m3-capture-benchmark-v1",
+          "cases": [
+            {
+              "id": "DUP-001",
+              "channel": "text",
+              "locale": "en",
+              "input": "I spent 10 EGP from cash",
+              "expected": {
+                "operation_type": "PersonalExpense",
+                "amount_minor_units": 1000,
+                "currency": "EGP",
+                "effective_at": null,
+                "account_reference": "cash",
+                "destination_account_reference": null
+              },
+              "required_fields": [],
+              "missing_fields": [],
+              "ambiguities": [],
+              "contradictions": [],
+              "adversarial_constraints": []
+            },
+            {
+              "id": "DUP-001",
+              "channel": "text",
+              "locale": "en",
+              "input": "I spent 20 EGP from cash",
+              "expected": {
+                "operation_type": "PersonalExpense",
+                "amount_minor_units": 2000,
+                "currency": "EGP",
+                "effective_at": null,
+                "account_reference": "cash",
+                "destination_account_reference": null
+              },
+              "required_fields": [],
+              "missing_fields": [],
+              "ambiguities": [],
+              "contradictions": [],
+              "adversarial_constraints": []
+            }
+          ]
+        }
+        """;
+
+        var action = () => CaptureBenchmarkCatalog.Load(json);
+
+        action.Should().Throw<InvalidOperationException>().WithMessage("*DUP-001*");
+    }
+
+    [Fact]
+    public void Catalog_rejects_unknown_channels()
+    {
+        const string json = """
+        {
+          "schema_version": "m3-capture-benchmark-v1",
+          "cases": [{
+            "id": "BAD-CHANNEL-001",
+            "channel": "email",
+            "locale": "en",
+            "input": "I spent 10 EGP from cash",
+            "expected": {
+              "operation_type": "PersonalExpense",
+              "amount_minor_units": 1000,
+              "currency": "EGP",
+              "effective_at": null,
+              "account_reference": "cash",
+              "destination_account_reference": null
+            },
+            "required_fields": [],
+            "missing_fields": [],
+            "ambiguities": [],
+            "contradictions": [],
+            "adversarial_constraints": []
+          }]
+        }
+        """;
+
+        var action = () => CaptureBenchmarkCatalog.Load(json);
+
+        action.Should().Throw<InvalidOperationException>().WithMessage("*email*");
+    }
+
 }
 
 public sealed class CaptureBenchmarkRunnerTests
