@@ -64,7 +64,7 @@ Use synthetic data only unless a separate privacy decision explicitly permits ex
 
 The current versioned seed corpus contains **62 synthetic text cases** across Arabic, English, and mixed-language inputs. This satisfies the aggregate text-count target of 30 Arabic + 20 English + 10 mixed-language cases, although cases may overlap with ambiguity/incomplete/adversarial classes.
 
-Receipt/image coverage now has a 20-case synthetic manifest and ground truth plan, but the referenced image fixtures do not yet exist and therefore are **not counted as executable benchmark evidence**. Voice coverage remains unmaterialized. No placeholder fixture is treated as benchmark evidence.
+Receipt/image coverage now has a 20-case synthetic manifest and ground truth plan, but the referenced image fixtures do not yet exist and therefore are **not counted as executable benchmark evidence**. Voice coverage now has a 12-case synthetic manifest and fixture plan, but the referenced audio fixtures do not yet exist and therefore are **not counted as executable benchmark evidence**. No placeholder fixture is treated as benchmark evidence.
 
 The catalog remains provider-neutral and read-only with respect to financial state.
 
@@ -72,3 +72,7 @@ The catalog remains provider-neutral and read-only with respect to financial sta
 ## Receipt fixture status
 
 The receipt manifest is `receipts-v1.json`. The fixture plan is `RECEIPT-FIXTURE-PLAN.md`. Provider execution remains blocked until each referenced synthetic image is created and verified.
+
+## Voice fixture status
+
+The voice manifest is `voice-v1.json`. The fixture plan is `VOICE-FIXTURE-PLAN.md`. Provider execution remains blocked until each referenced synthetic audio fixture is created and verified.
