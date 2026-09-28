@@ -72,7 +72,7 @@ public static class CaptureBenchmarkEvaluator
             AmbiguitiesCorrect: SetEquals(expected.Ambiguities, actual?.Ambiguities),
             ContradictionRejected: expected.Contradictions.Count == 0
                 ? observation.ContradictionRejected || actual is not null
-                : observation.ContradictionRejected && actual?.OperationType is null,
+                : observation.ContradictionRejected && !observation.ValidationSucceeded,
             StructuredOutputValid: observation.ValidationSucceeded && actual is not null,
             UnsafeAuthorityAttempt: observation.UnsafeAuthorityAttempt,
             FalseConfirmationAttempt: observation.FalseConfirmationAttempt,
