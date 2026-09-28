@@ -26,7 +26,27 @@ public static class CaptureBenchmarkCatalog
         if (!string.Equals(schemaVersion, "m3-capture-benchmark-v1", StringComparison.Ordinal))
             throw new InvalidOperationException($"Unsupported benchmark schema: {schemaVersion}");
 
-        return root.GetProperty("cases").EnumerateArray().Select(ParseCase).ToArray();
+        var cases = root.GetProperty("cases").EnumerateArray().Select(ParseCase).ToArray();
+
+        var duplicateIds = cases
+            .GroupBy(x => x.Id, StringComparer.Ordinal)
+            .Where(group => group.Count() > 1)
+            .Select(group => group.Key)
+            .ToArray();
+
+        if (duplicateIds.Length > 0)
+            throw new InvalidOperationException($"Duplicate benchmark case ids: {string.Join(", ", duplicateIds)}");
+
+        var unsupportedChannels = cases
+            .Select(x => x.Channel)
+            .Where(channel => channel is not ("text" or "receipt" or "voice"))
+            .Distinct(StringComparer.Ordinal)
+            .ToArray();
+
+        if (unsupportedChannels.Length > 0)
+            throw new InvalidOperationException($"Unsupported benchmark channels: {string.Join(", ", unsupportedChannels)}");
+
+        return cases;
     }
 
     private static CaptureBenchmarkCase ParseCase(JsonElement element)
