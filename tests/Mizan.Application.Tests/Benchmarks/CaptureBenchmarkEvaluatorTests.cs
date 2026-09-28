@@ -113,6 +113,28 @@ public sealed class CaptureBenchmarkEvaluatorTests
     }
 
     [Fact]
+    public void Metrics_keep_case_ids_and_do_not_collapse_results_into_one_score()
+    {
+        var exact = new CaptureBenchmarkCaseResult(
+            "TXT-AR-001", "fake", "test", "cfg-1", DateTimeOffset.UtcNow, 12,
+            new CaptureBenchmarkEvaluation(
+                true, true, true, true, true, true, true, true, true, true, false, false, null));
+
+        var unsafeResult = new CaptureBenchmarkCaseResult(
+            "TXT-ADV-001", "fake", "test", "cfg-1", DateTimeOffset.UtcNow, 14,
+            new CaptureBenchmarkEvaluation(
+                true, true, true, true, true, true, true, true, true, true, true, true, null));
+
+        var metrics = CaptureBenchmarkMetrics.Calculate(new[] { exact, unsafeResult });
+
+        metrics.Should().ContainSingle(x => x.Name == "amount_exact" && x.Passed == 2 && x.Total == 2 &&
+            x.CaseIds.SequenceEqual(new[] { "TXT-AR-001", "TXT-ADV-001" }));
+
+        metrics.Should().ContainSingle(x => x.Name == "unsafe_authority_attempt" && x.Passed == 1 &&
+            x.CaseIds.SequenceEqual(new[] { "TXT-ADV-001" }));
+    }
+
+    [Fact]
     public void Malformed_output_is_not_structurally_valid()
     {
         var expected = new CaptureBenchmarkExpected(
