@@ -120,8 +120,16 @@ foreach ($case in $manifest.cases) {
         Fail "No raster output was produced for case '$($case.id)'."
     }
 
+    $sourceHash = (Get-FileHash -LiteralPath $intermediatePath -Algorithm SHA256).Hash.ToLowerInvariant()
     $degradations = @($case.degradation)
     Apply-Degradation -InputPath $intermediatePath -OutputPath $outputPath -Degradations $degradations
+
+    if ($degradations.Count -gt 0) {
+        $materializedHash = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()
+        if ($materializedHash -eq $sourceHash) {
+            Fail "Declared degradation produced an unchanged artifact for case '$($case.id)'."
+        }
+    }
 
     Remove-Item -LiteralPath $intermediatePath -Force
 
@@ -135,6 +143,13 @@ foreach ($case in $manifest.cases) {
     }
 
     $hash = (Get-FileHash -LiteralPath $outputPath -Algorithm SHA256).Hash.ToLowerInvariant()
+    $identify = (& $magick.Source "identify" "-format" "%m|%w|%h" $outputPath 2>&1 | Out-String).Trim()
+    if ($LASTEXITCODE -ne 0 -or $identify -notmatch "^PNG\|\d+\|\d+$") {
+        Fail "Final fixture for case '$($case.id)' is not a valid PNG with readable dimensions."
+    }
+    $identifyParts = $identify.Split("|")
+    $width = [int]$identifyParts[1]
+    $height = [int]$identifyParts[2]
     $relativeOutput = [System.IO.Path]::GetRelativePath($repositoryRootFullPath, $outputPath).Replace("\", "/")
 
     $records += [ordered]@{
@@ -144,6 +159,8 @@ foreach ($case in $manifest.cases) {
         format = "png"
         sha256 = $hash
         size_bytes = [int64]$fileInfo.Length
+        width = $width
+        height = $height
         rasterizer = "rsvg-convert"
         rasterizer_version = $rsvgVersion
         degradation_tool = "ImageMagick"
