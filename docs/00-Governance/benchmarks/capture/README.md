@@ -64,14 +64,14 @@ Use synthetic data only unless a separate privacy decision explicitly permits ex
 
 The current versioned seed corpus contains **62 synthetic text cases** across Arabic, English, and mixed-language inputs. This satisfies the aggregate text-count target of 30 Arabic + 20 English + 10 mixed-language cases, although cases may overlap with ambiguity/incomplete/adversarial classes.
 
-Receipt/image coverage now has a 20-case synthetic manifest and ground truth plan, but the referenced image fixtures do not yet exist and therefore are **not counted as executable benchmark evidence**. Voice coverage now has a 12-case synthetic manifest and fixture plan, but the referenced audio fixtures do not yet exist and therefore are **not counted as executable benchmark evidence**. No placeholder fixture is treated as benchmark evidence.
+Receipt/image coverage now has a 20-case synthetic manifest plus 20 repository fixture files. The current fixtures are **synthetic SVG structured-image fixtures**, useful for fixture-contract/resolution testing but not yet accepted as representative raster OCR/vision evidence. Voice coverage has a 12-case synthetic manifest and fixture plan, but the referenced audio fixtures do not yet exist and therefore are **not counted as executable benchmark evidence**. No placeholder fixture is treated as benchmark evidence.
 
 The catalog remains provider-neutral and read-only with respect to financial state.
 
 
 ## Receipt fixture status
 
-The receipt manifest is `receipts-v1.json`. The fixture plan is `RECEIPT-FIXTURE-PLAN.md`. Provider execution remains blocked until each referenced synthetic image is created and verified.
+The receipt manifest is `receipts-v1.json`. The fixture plan is `RECEIPT-FIXTURE-PLAN.md`. All 20 references currently resolve to repository SVG fixtures. Provider execution remains blocked until rasterized/decodable fixtures suitable for the selected provider are created and verified.
 
 ## Voice fixture status
 
@@ -80,4 +80,4 @@ The voice manifest is `voice-v1.json`. The fixture plan is `VOICE-FIXTURE-PLAN.m
 
 A provider-neutral fixture resolver/validator now exists in the benchmark test infrastructure. It enforces benchmark-root containment, file existence/non-empty checks, supported receipt/voice formats, basic decodability checks, SHA-256 capture, and WAV metadata extraction where applicable.
 
-The repository still does **not** contain the 20 receipt image fixtures or the 12 voice audio fixtures. Therefore fixture resolution is implemented and testable, but multimodal provider execution remains blocked until real synthetic fixtures are materialized and verified. No placeholder or generated local-only file is counted as benchmark evidence.
+The repository contains the 20 receipt SVG fixtures, so receipt fixture resolution is now materially testable. However, these SVGs are not yet treated as provider-execution evidence because representative raster-image behavior has not been established. The repository still does not contain the 12 voice audio fixtures. Multimodal provider execution therefore remains blocked. No local-only or placeholder file is counted as benchmark evidence.
