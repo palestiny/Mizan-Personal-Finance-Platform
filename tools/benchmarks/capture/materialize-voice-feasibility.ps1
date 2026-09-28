@@ -8,6 +8,8 @@ param(
 
     [string]$Model = "mohammedaly22/VoiceTut-TTS",
     [string]$Speaker = "Mohamed",
+
+    [string]$ExpectedPackageVersion = "0.1.1",
     [string]$OutputDirectory = "artifacts/benchmarks/capture/voice"
 )
 
@@ -60,10 +62,13 @@ def main():
     p.add_argument("--model", required=True)
     p.add_argument("--revision", required=True)
     p.add_argument("--speaker", required=True)
+    p.add_argument("--expected-package-version", required=True)
     args = p.parse_args()
 
     try:
-        from voicetut_tts import VoiceTutTTS
+        from voicetut_tts import VoiceTutTTS, __version__
+        if __version__ != args.expected_package_version:
+            raise RuntimeError(f"Unexpected voicetut-tts version: {__version__}; expected {args.expected_package_version}")
     except Exception as exc:
         raise RuntimeError(
             "voicetut-tts is not installed in this Python environment. "
@@ -80,6 +85,7 @@ def main():
         "schema": "m3-capture-voice-feasibility-evidence-v1",
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "generator": "VoiceTut-TTS",
+        "generator_version": __version__,
         "model": args.model,
         "model_revision": args.revision,
         "speaker": args.speaker,
@@ -109,6 +115,7 @@ def main():
         evidence["cases"].append({
             "case_id": case_id,
             "fixture_ref": "artifacts/benchmarks/capture/voice/" + case_id + ".wav",
+            "input_sha256": hashlib.sha256(transcript.encode("utf-8")).hexdigest(),
             "output_sha256": sha256(output_path),
             "generator": "VoiceTut-TTS",
             "model": args.model,
@@ -138,7 +145,7 @@ Set-Content -Path $temp -Value $script -Encoding UTF8
 try {
     $caseJson = Join-Path ([System.IO.Path]::GetTempPath()) ("mizan-voice-cases-" + [guid]::NewGuid().ToString("N") + ".json")
     $cases | ConvertTo-Json -Depth 20 | Set-Content -Path $caseJson -Encoding UTF8
-    & $python.Source $temp --cases $caseJson --output $outDir --model $Model --revision $ModelRevision --speaker $Speaker
+    & $python.Source $temp --cases $caseJson --output $outDir --model $Model --revision $ModelRevision --speaker $Speaker --expected-package-version $ExpectedPackageVersion
     if ($LASTEXITCODE -ne 0) { throw "Voice fixture generator exited with code $LASTEXITCODE." }
 }
 finally {
