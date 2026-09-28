@@ -58,3 +58,12 @@ No benchmark case may create a Proposal, Financial Operation, or Financial Effec
 ## Privacy
 
 Use synthetic data only unless a separate privacy decision explicitly permits external processing of a specific dataset. Never include account numbers, payment credentials, authentication secrets, or unnecessary personal financial information.
+
+
+## Current corpus status
+
+The current versioned seed corpus contains **62 synthetic text cases** across Arabic, English, and mixed-language inputs. This satisfies the aggregate text-count target of 30 Arabic + 20 English + 10 mixed-language cases, although cases may overlap with ambiguity/incomplete/adversarial classes.
+
+Receipt/image and voice coverage are intentionally **not counted yet**. Those require explicit synthetic fixtures and channel-specific ground truth before provider execution. No placeholder fixture is treated as benchmark evidence.
+
+The catalog remains provider-neutral and read-only with respect to financial state.
