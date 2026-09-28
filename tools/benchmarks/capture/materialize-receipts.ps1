@@ -10,7 +10,7 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 function Fail([string]$Message) {
-    throw "DG-023 receipt materialization failed: $Message"
+    throw "DG-023 receipt rasterization failed: $Message"
 }
 
 $command = Get-Command rsvg-convert -ErrorAction SilentlyContinue
@@ -27,32 +27,29 @@ if ($versionOutput -notmatch [regex]::Escape($ExpectedRsvgVersion)) {
     Fail "Expected rsvg-convert version '$ExpectedRsvgVersion', but detected '$versionOutput'."
 }
 
+$repositoryRootFullPath = [System.IO.Path]::GetFullPath($RepositoryRoot)
 $manifestFullPath = [System.IO.Path]::GetFullPath((Join-Path $RepositoryRoot $ManifestPath))
 if (-not (Test-Path -LiteralPath $manifestFullPath -PathType Leaf)) {
     Fail "Manifest not found: $manifestFullPath"
 }
 
 $manifest = Get-Content -LiteralPath $manifestFullPath -Raw | ConvertFrom-Json
-if ($manifest.schema -ne "m3-capture-receipts-v1") {
-    Fail "Unexpected receipt manifest schema '$($manifest.schema)'."
+if ($manifest.schema_version -ne "m3-capture-receipt-benchmark-v1") {
+    Fail "Unexpected receipt manifest schema '$($manifest.schema_version)'."
 }
 
-$repositoryRootFullPath = [System.IO.Path]::GetFullPath($RepositoryRoot)
+$manifestDirectory = Split-Path -Parent $manifestFullPath
 $outputFullPath = [System.IO.Path]::GetFullPath((Join-Path $RepositoryRoot $OutputDirectory))
 New-Item -ItemType Directory -Force -Path $outputFullPath | Out-Null
 
 $records = @()
 foreach ($case in $manifest.cases) {
-    if ($case.channel -ne "receipt") {
-        Fail "Case '$($case.id)' is not a receipt case."
-    }
-
     $fixtureRef = [string]$case.fixture_ref
     if ([string]::IsNullOrWhiteSpace($fixtureRef)) {
         Fail "Case '$($case.id)' has no fixture_ref."
     }
 
-    $sourcePath = [System.IO.Path]::GetFullPath((Join-Path $manifestFullPath.Substring(0, $manifestFullPath.LastIndexOf([System.IO.Path]::DirectorySeparatorChar)) $fixtureRef))
+    $sourcePath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory $fixtureRef))
     if (-not $sourcePath.StartsWith($repositoryRootFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
         Fail "Fixture path escapes repository root for case '$($case.id)'."
     }
@@ -87,20 +84,22 @@ foreach ($case in $manifest.cases) {
         size_bytes = [int64]$fileInfo.Length
         rasterizer = "rsvg-convert"
         rasterizer_version = $versionOutput
+        degradation_from_manifest = @($case.degradation)
     }
 }
 
 $evidencePath = Join-Path $outputFullPath "materialization-evidence.json"
 $evidence = [ordered]@{
-    schema = "m3-capture-receipt-materialization-v1"
+    schema = "m3-capture-receipt-rasterization-v1"
     manifest = $ManifestPath.Replace("\\", "/")
     expected_rsvg_version = $ExpectedRsvgVersion
     detected_rsvg_version = $versionOutput
     generated_at_utc = (Get-Date).ToUniversalTime().ToString("o")
     synthetic = $true
+    note = "This tool rasterizes the existing synthetic SVG fixtures. It does not invent additional degradation. Manifest degradation is recorded for independent verification."
     cases = $records
 }
 
 $evidence | ConvertTo-Json -Depth 8 | Set-Content -LiteralPath $evidencePath -Encoding UTF8
-Write-Host "Materialized $($records.Count) receipt fixtures."
+Write-Host "Rasterized $($records.Count) receipt fixtures."
 Write-Host "Evidence: $evidencePath"
