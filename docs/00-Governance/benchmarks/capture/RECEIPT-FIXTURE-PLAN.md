@@ -2,11 +2,11 @@
 
 ## Status
 
-Design-stage synthetic fixture manifest for DG-023. The manifest defines expected receipt semantics but does not claim that image files exist yet.
+Synthetic fixture plan for DG-023. The 20 manifest references now resolve to repository SVG fixtures; these establish deterministic fixture identity and resolver coverage but are not yet representative raster OCR/vision evidence.
 
 ## Fixture rule
 
-Every `fixture_ref` must resolve to a synthetic image before receipt provider execution. A manifest entry alone is not evidence.
+Every `fixture_ref` must resolve to a verified synthetic image before receipt provider execution. The current SVG fixtures satisfy repository fixture resolution, but a provider-execution gate still requires representative raster-image fixtures and verification.
 
 ## Required coverage
 
@@ -29,6 +29,6 @@ Receipt extraction is normalized into the existing vendor-neutral capture interp
 
 No fixture may create a Proposal, Operation, or Effect.
 
-## Important limitation
+## Current limitation
 
-The current repository commit defines the manifest and ground truth only. It does not claim the referenced image files exist. Provider execution remains blocked until the fixture files are actually created and verified.
+The repository currently contains 20 synthetic SVG receipt fixtures bound by `fixture_ref`. They are intentionally treated as structured visual fixtures rather than production-realistic OCR evidence. Provider execution remains blocked until rasterized fixtures are materialized, verified, and shown to be suitable for the selected provider path.
