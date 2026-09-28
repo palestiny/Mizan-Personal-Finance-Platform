@@ -138,3 +138,28 @@ Those belong to the later DG-023 provider benchmark.
 ## Current evidence
 
 No local execution result is currently recorded. Therefore this harness remains unexecuted and no feasibility PASS is claimed.
+
+
+## Executable preparation script
+
+The repository-side preparation entry point is:
+
+`tools/benchmarks/capture/materialize-voice-feasibility.ps1`
+
+The current feasibility candidate is VoiceTut-TTS package version `0.1.1`, with the model pinned to immutable revision `2988105848781c1645f32d8fb3c1ef3c6ea51eeb`. The model revision corresponds to the repository commit that introduced the current Egyptian model weights; the model card documents the local `VoiceTutTTS.synthesize(..., speaker=..., output=...)` API. citeturn1search0turn1search2
+
+Example execution after the preparation environment is installed:
+
+```powershell
+pwsh ./tools/benchmarks/capture/materialize-voice-feasibility.ps1 `
+  -RepositoryRoot . `
+  -ModelRevision 2988105848781c1645f32d8fb3c1ef3c6ea51eeb `
+  -ExpectedPackageVersion 0.1.1 `
+  -Speaker Mohamed
+```
+
+This command is intentionally not part of CI and must not run against real user voice data. It produces only synthetic feasibility fixtures and evidence.
+
+The script fails closed when Python or the pinned `voicetut-tts` package version is unavailable/mismatched. It records a SHA-256 of the exact benchmark transcript and the generated WAV, plus runtime/model/package metadata.
+
+**Execution status:** not executed yet. No feasibility PASS is claimed.
