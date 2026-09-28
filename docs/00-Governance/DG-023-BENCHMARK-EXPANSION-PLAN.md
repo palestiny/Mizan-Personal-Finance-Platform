@@ -82,3 +82,14 @@ A provider can only enter the production-selection discussion after:
 - operational and cost observations are recorded.
 
 No benchmark result may automatically select a provider or create a financial operation.
+
+
+## Multimodal fixture readiness
+
+Before provider execution, all three channels use the DG-023 multimodal fixture contract:
+
+`case_id → dataset_version → fixture_ref → verified fixture → provider/model/config → normalized observation → evaluation`
+
+Text cases are inline inputs. Receipt and voice cases require verified synthetic fixtures. Missing or invalid fixtures are preparation failures and must not be counted as provider failures.
+
+See `DG-023-MULTIMODAL-FIXTURE-CONTRACT.md` for the resolution, validation, privacy, and reproducibility rules.
