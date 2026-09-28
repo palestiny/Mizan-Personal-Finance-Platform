@@ -76,3 +76,8 @@ The receipt manifest is `receipts-v1.json`. The fixture plan is `RECEIPT-FIXTURE
 ## Voice fixture status
 
 The voice manifest is `voice-v1.json`. The fixture plan is `VOICE-FIXTURE-PLAN.md`. Provider execution remains blocked until each referenced synthetic audio fixture is created and verified.
+## Fixture resolution status
+
+A provider-neutral fixture resolver/validator now exists in the benchmark test infrastructure. It enforces benchmark-root containment, file existence/non-empty checks, supported receipt/voice formats, basic decodability checks, SHA-256 capture, and WAV metadata extraction where applicable.
+
+The repository still does **not** contain the 20 receipt image fixtures or the 12 voice audio fixtures. Therefore fixture resolution is implemented and testable, but multimodal provider execution remains blocked until real synthetic fixtures are materialized and verified. No placeholder or generated local-only file is counted as benchmark evidence.
