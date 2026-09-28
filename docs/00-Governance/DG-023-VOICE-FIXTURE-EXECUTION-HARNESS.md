@@ -146,7 +146,7 @@ The repository-side preparation entry point is:
 
 `tools/benchmarks/capture/materialize-voice-feasibility.ps1`
 
-The current feasibility candidate is VoiceTut-TTS package version `0.1.1`, with the model pinned to immutable revision `2988105848781c1645f32d8fb3c1ef3c6ea51eeb`. The model revision corresponds to the repository commit that introduced the current Egyptian model weights; the model card documents the local `VoiceTutTTS.synthesize(..., speaker=..., output=...)` API. citeturn1search0turn1search2
+The current feasibility candidate is VoiceTut-TTS package version `0.1.1`, with the model pinned to immutable revision `2988105848781c1645f32d8fb3c1ef3c6ea51eeb`. The model revision corresponds to the repository commit that introduced the current Egyptian model weights; the model card documents the local `VoiceTutTTS.synthesize(..., speaker=..., output=...)` API.
 
 Example execution after the preparation environment is installed:
 
