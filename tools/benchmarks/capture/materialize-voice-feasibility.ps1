@@ -67,13 +67,14 @@ def main():
 
     try:
         from voicetut_tts import VoiceTutTTS, __version__
-        if __version__ != args.expected_package_version:
-            raise RuntimeError(f"Unexpected voicetut-tts version: {__version__}; expected {args.expected_package_version}")
     except Exception as exc:
         raise RuntimeError(
             "voicetut-tts is not installed in this Python environment. "
             "Install the pinned preparation dependency before running this harness."
         ) from exc
+
+    if __version__ != args.expected_package_version:
+        raise RuntimeError(f"Unexpected voicetut-tts version: {__version__}; expected {args.expected_package_version}")
 
     with open(args.cases, "r", encoding="utf-8") as f:
         cases = json.load(f)
@@ -118,6 +119,7 @@ def main():
             "input_sha256": hashlib.sha256(transcript.encode("utf-8")).hexdigest(),
             "output_sha256": sha256(output_path),
             "generator": "VoiceTut-TTS",
+            "generator_version": __version__,
             "model": args.model,
             "model_revision": args.revision,
             "speaker": args.speaker,
