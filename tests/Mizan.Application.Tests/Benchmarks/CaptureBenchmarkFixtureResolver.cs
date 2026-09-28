@@ -129,7 +129,7 @@ public static class CaptureBenchmarkFixtureResolver
         var sampleRate = BitConverter.ToInt32(bytes, 24);
         var byteRate = BitConverter.ToInt32(bytes, 28);
         var dataSize = BitConverter.ToUInt32(bytes, 40);
-        var duration = byteRate > 0 ? dataSize / (double)byteRate : null;
+        double? duration = byteRate > 0 ? dataSize / (double)byteRate : null;
 
         if (channels <= 0 || sampleRate <= 0 || byteRate <= 0 || duration is null || duration <= 0)
             throw new InvalidOperationException($"Invalid WAV metadata: {path}");
