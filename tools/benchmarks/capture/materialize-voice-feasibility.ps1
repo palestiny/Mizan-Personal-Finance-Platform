@@ -27,12 +27,12 @@ $outDir = Resolve-RepoPath $OutputDirectory
 New-Item -ItemType Directory -Force -Path $outDir | Out-Null
 
 $manifest = Get-Content -Raw -Path $manifestPath | ConvertFrom-Json
-if ($manifest.schema -ne "m3-capture-voice-benchmark-v1") {
+if ($manifest.schema_version_version -ne "m3-capture-voice-benchmark-v1") {
     throw "Unsupported voice benchmark schema: $($manifest.schema)"
 }
 
 $caseIds = @("VOICE-001", "VOICE-002", "VOICE-004")
-$cases = @($manifest.cases | Where-Object { $caseIds -contains $_.case_id })
+$cases = @($manifest.cases | Where-Object { $caseIds -contains $_.id })
 if ($cases.Count -ne $caseIds.Count) {
     throw "Manifest does not contain all required feasibility cases."
 }
@@ -92,14 +92,10 @@ def main():
 
     for case in cases:
         case_id = case["case_id"]
-        transcript = case["transcript"]
+        transcript = case["transcript_hint"]
         output_path = os.path.join(args.output, case_id + ".wav")
 
-        result = generator.generate(
-            text=transcript,
-            speaker=args.speaker
-        )
-        result.save(output_path)
+        generator.synthesize(transcript, speaker=args.speaker, output=output_path)
 
         if not os.path.isfile(output_path) or os.path.getsize(output_path) == 0:
             raise RuntimeError(f"{case_id}: generated WAV is missing or empty")
