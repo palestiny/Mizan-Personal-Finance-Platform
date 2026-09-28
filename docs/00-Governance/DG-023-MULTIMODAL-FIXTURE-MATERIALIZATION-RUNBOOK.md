@@ -33,7 +33,7 @@ The repository currently contains 20 synthetic SVG fixtures. They establish dete
 
 The next materialization step is:
 
-1. rasterize each SVG into PNG/JPEG using a pinned, reproducible tool/version;
+1. rasterize each SVG into PNG using the repository materialization script and an explicitly verified `rsvg-convert` version;
 2. preserve the manifest case ID;
 3. apply only the degradation specified by the case;
 4. verify dimensions, MIME/format, decodability, and SHA-256;
@@ -41,7 +41,7 @@ The next materialization step is:
 6. record the tool/version and fixture hash;
 7. update fixture_ref only if the repository path changes.
 
-The rasterization tool is a benchmark-preparation dependency, not an application runtime dependency.
+The rasterization tool is a benchmark-preparation dependency, not an application runtime dependency. The repository now contains `tools/benchmarks/capture/materialize-receipts.ps1`, which requires an explicitly supplied `rsvg-convert` version, rasterizes the 20 SVG sources to PNG, records SHA-256 and tool provenance, and writes preparation evidence under `artifacts/`. It does not claim provider-execution evidence by itself and does not invent degradation beyond what is declared by the manifest.
 
 ### Receipt acceptance
 
