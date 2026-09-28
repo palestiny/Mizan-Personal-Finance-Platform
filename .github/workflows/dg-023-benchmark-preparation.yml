@@ -42,9 +42,9 @@ jobs:
       - name: Materialize receipt benchmark fixtures
         shell: pwsh
         run: |
-          ./tools/benchmarks/capture/materialize-receipts.ps1 \
-            -RepositoryRoot . \
-            -ExpectedRsvgVersion "${{ env.EXPECTED_RSVG_VERSION }}" \
+          ./tools/benchmarks/capture/materialize-receipts.ps1 `
+            -RepositoryRoot . `
+            -ExpectedRsvgVersion "${{ env.EXPECTED_RSVG_VERSION }}" `
             -ExpectedMagickVersion "${{ env.EXPECTED_MAGICK_VERSION }}"
 
       - name: Upload preparation evidence
