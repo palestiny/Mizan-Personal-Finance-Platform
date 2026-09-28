@@ -374,3 +374,17 @@ Accept transaction boundaries and lifecycle semantics before defining the balanc
 - **Verification:** DG-022 proposal PR #38 was merged to main at `af90ec3783788964d8a37451e1e5f6848cfa176f`; acceptance update committed at `cfedcde36970dd13b2f3d9d26e58c811cebb758e`.
 - **Important caveat:** no real vendor has been selected or integrated. Vendor selection requires separate evidence-based evaluation.
 - **Next:** implement the real provider adapter boundary with TDD, using a deterministic fake and provider contract tests before selecting/integrating a production vendor.
+
+
+## CP-029 — M3 Capture Provider Selection & Evidence Gate
+- **Status:** Proposed — Product Owner decision required
+- **Date:** 2026-09-28
+- **Phase:** M3 — Frictionless Capture
+- **Gate:** DG-023 Capture Provider Selection & Evidence
+- **Scope:** Establish an evidence-based method for selecting a production capture provider across text, receipt/image, and voice channels without coupling Mizan financial semantics to a vendor.
+- **Proposed direction:** benchmark provider capabilities using controlled Mizan cases; start with one production provider path where evidence supports it; preserve the provider-neutral adapter boundary; defer runtime multi-provider fallback.
+- **Benchmark dimensions:** Arabic/English/mixed text, receipts, ambiguity, incompleteness, malformed/adversarial input, and representative voice cases.
+- **Safety invariant:** provider confidence is diagnostic only; provider output cannot create authoritative AccountIds, Proposals, Operations, or Effects; invalid/ambiguous output fails closed.
+- **Privacy invariant:** use synthetic or explicitly permitted benchmark data by default; raw capture/provider payloads are not retained by default.
+- **Decision pending:** production provider selection or explicit deferral after evidence is collected.
+- **Next:** Product Owner decision on DG-023, then implement the selected provider adapter only after the evidence gate is closed.
