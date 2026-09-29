@@ -1,0 +1,56 @@
+name: DG-023 Benchmark Preparation
+
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: dg-023-benchmark-preparation
+  cancel-in-progress: false
+
+jobs:
+  receipt-materialization:
+    runs-on: ubuntu-26.04
+    permissions:
+      contents: read
+
+    env:
+      EXPECTED_RSVG_VERSION: "2.61.3"
+      EXPECTED_MAGICK_VERSION: "7.1.2"
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Install pinned image tooling
+        shell: bash
+        run: |
+          set -euo pipefail
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+            "librsvg2-bin=2.61.3+dfsg-3" \
+            "imagemagick=8:7.1.2.18+dfsg1-1"
+
+      - name: Verify tool versions
+        shell: bash
+        run: |
+          set -euo pipefail
+          rsvg-convert --version
+          magick --version
+          rsvg-convert --version | grep -F "${EXPECTED_RSVG_VERSION}"
+          magick --version | grep -F "${EXPECTED_MAGICK_VERSION}"
+
+      - name: Materialize receipt benchmark fixtures
+        shell: pwsh
+        run: |
+          ./tools/benchmarks/capture/materialize-receipts.ps1 `
+            -RepositoryRoot . `
+            -ExpectedRsvgVersion "${{ env.EXPECTED_RSVG_VERSION }}" `
+            -ExpectedMagickVersion "${{ env.EXPECTED_MAGICK_VERSION }}"
+
+      - name: Upload preparation evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: dg-023-receipt-materialization-evidence
+          path: artifacts/benchmarks/capture/receipts/
+          if-no-files-found: error
+          retention-days: 14
