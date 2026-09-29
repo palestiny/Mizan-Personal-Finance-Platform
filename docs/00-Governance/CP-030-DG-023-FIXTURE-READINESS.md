@@ -1,6 +1,6 @@
 # CP-030 — DG-023 Fixture Readiness
 
-**Status:** In progress  
+**Status:** In progress — receipt readiness PASS; voice readiness pending  
 **Gate:** DG-023 Capture Provider Selection & Evidence  
 **Purpose:** convert the approved evidence method into executable, independently verifiable multimodal benchmark inputs.
 
@@ -30,11 +30,13 @@ CP-030 is complete only when:
 
 ### Receipt
 
-**Ready to execute:** yes.
+**Preparation result:** PASS.
 
-The preparation workflow now supports both manual dispatch and push-based execution when its materialization inputs change. This makes the preparation step observable in GitHub Actions without changing application/runtime boundaries.
+GitHub Actions run `36597137235` completed successfully on commit `976df1946f349bf9dc2355c24a24f4a9f494585e`. The run produced artifact `dg-023-receipt-materialization-evidence` containing 20 PNG fixtures plus `materialization-evidence.json`.
 
-**Not yet verified:** successful workflow run and the resulting 20 raster artifacts.
+Verification covered: all 20 cases present; PNG format and readable dimensions recorded; SHA-256 recorded per artifact; pinned `rsvg-convert 2.61.3` and ImageMagick `7.1.2-18` recorded; synthetic classification retained; declared degradations produced distinct artifacts. Artifact inspection also confirmed the intended crop/skew/glare/low-contrast/blur and contradiction/adversarial cases are materially represented.
+
+The receipt portion of CP-030 is therefore complete.
 
 ### Voice
 
@@ -55,8 +57,8 @@ After fixture readiness is proven, provider execution may begin under the DG-023
 **NOT CLOSED.**
 
 The remaining evidence is execution evidence, not additional architecture design:
-1. receipt workflow PASS + 20 accepted raster fixtures;
+1. ~~receipt workflow PASS + 20 accepted raster fixtures~~ — completed by run `36597137235` and artifact `11045658673`;
 2. voice feasibility PASS + 12 accepted voice fixtures;
-3. final fixture-resolution verification.
+3. final fixture-resolution verification after both modalities are ready.
 
 Until these are present, DG-023 provider benchmarking remains blocked.
