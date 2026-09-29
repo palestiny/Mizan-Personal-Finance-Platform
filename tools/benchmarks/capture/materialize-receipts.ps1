@@ -100,7 +100,12 @@ foreach ($case in $manifest.cases) {
         Fail "Case '$($case.id)' has no fixture_ref."
     }
 
-    $sourcePath = [System.IO.Path]::GetFullPath((Join-Path $manifestDirectory $fixtureRef))
+    $fixturePath = if ($fixtureRef -like "synthetic/*") {
+        Join-Path (Join-Path $manifestDirectory "fixtures/receipts") ($fixtureRef.Substring("synthetic/".Length))
+    } else {
+        Join-Path $manifestDirectory $fixtureRef
+    }
+    $sourcePath = [System.IO.Path]::GetFullPath($fixturePath)
     if (-not $sourcePath.StartsWith($repositoryRootFullPath, [System.StringComparison]::OrdinalIgnoreCase)) {
         Fail "Fixture path escapes repository root for case '$($case.id)'."
     }
