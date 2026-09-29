@@ -1,4 +1,5 @@
 name: DG-023 Benchmark Preparation
+run-name: CP-030 Receipt Fixture Preparation — ${{ github.ref_name }} @ ${{ github.sha }}
 
 on:
   push:
