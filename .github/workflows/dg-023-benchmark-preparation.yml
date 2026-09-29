@@ -1,6 +1,12 @@
 name: DG-023 Benchmark Preparation
 
 on:
+  push:
+    paths:
+      - ".github/workflows/dg-023-benchmark-preparation.yml"
+      - "tools/benchmarks/capture/materialize-receipts.ps1"
+      - "docs/00-Governance/benchmarks/capture/receipts-v1.json"
+      - "docs/00-Governance/benchmarks/capture/fixtures/receipts/**"
   workflow_dispatch:
 
 concurrency:
