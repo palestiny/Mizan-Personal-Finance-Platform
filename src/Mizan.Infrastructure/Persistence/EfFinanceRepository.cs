@@ -150,15 +150,20 @@ public sealed class EfFinanceRepository : IFinanceRepository
         }
         finally
         {
-            if (transaction is not null)
-                await transaction.DisposeAsync();
+            try
+            {
+                if (transaction is not null)
+                    await transaction.DisposeAsync();
+            }
+            finally
+            {
+                _transaction = null;
 
-            _transaction = null;
-
-            // A failed SaveChanges/COMMIT may leave Added entities tracked even though
-            // the database transaction was rolled back. Retrying with those entries
-            // can replay stale state or attempt to insert the same entities again.
-            _db.ChangeTracker.Clear();
+                // A failed SaveChanges/COMMIT may leave Added entities tracked even though
+                // the database transaction was rolled back. Retrying with those entries
+                // can replay stale state or attempt to insert the same entities again.
+                _db.ChangeTracker.Clear();
+            }
         }
     }
 
