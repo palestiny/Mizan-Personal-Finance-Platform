@@ -16,9 +16,14 @@ param(
 $ErrorActionPreference = "Stop"
 
 function Resolve-RepoPath([string]$Path) {
-    $root = (Resolve-Path $RepositoryRoot).Path
+    $root = [System.IO.Path]::GetFullPath((Resolve-Path $RepositoryRoot).Path)
     $candidate = [System.IO.Path]::GetFullPath((Join-Path $root $Path))
-    if (-not $candidate.StartsWith($root, [System.StringComparison]::OrdinalIgnoreCase)) {
+    $rootPrefix = $root.TrimEnd([System.IO.Path]::DirectorySeparatorChar, [System.IO.Path]::AltDirectorySeparatorChar) + [System.IO.Path]::DirectorySeparatorChar
+
+    if (
+        -not $candidate.Equals($root, [System.StringComparison]::OrdinalIgnoreCase) -and
+        -not $candidate.StartsWith($rootPrefix, [System.StringComparison]::OrdinalIgnoreCase)
+    ) {
         throw "Path escapes repository root: $Path"
     }
     return $candidate
