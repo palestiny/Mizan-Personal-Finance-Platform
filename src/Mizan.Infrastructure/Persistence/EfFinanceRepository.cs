@@ -131,12 +131,40 @@ public sealed class EfFinanceRepository : IFinanceRepository
 
     public async Task CommitTransactionAsync(CancellationToken cancellationToken)
     {
-        if (_transaction is not null) await _transaction.CommitAsync(cancellationToken);
+        var transaction = _transaction;
+        if (transaction is null)
+            return;
+
+        await transaction.CommitAsync(cancellationToken);
+        await transaction.DisposeAsync();
+        _transaction = null;
     }
 
     public async Task RollbackTransactionAsync(CancellationToken cancellationToken)
     {
-        if (_transaction is not null) await _transaction.RollbackAsync(cancellationToken);
+        var transaction = _transaction;
+        try
+        {
+            if (transaction is not null)
+                await transaction.RollbackAsync(cancellationToken);
+        }
+        finally
+        {
+            try
+            {
+                if (transaction is not null)
+                    await transaction.DisposeAsync();
+            }
+            finally
+            {
+                _transaction = null;
+
+                // A failed SaveChanges/COMMIT may leave Added entities tracked even though
+                // the database transaction was rolled back. Retrying with those entries
+                // can replay stale state or attempt to insert the same entities again.
+                _db.ChangeTracker.Clear();
+            }
+        }
     }
 
     public async Task UpdateAccountAsync(Account account, CancellationToken cancellationToken)
