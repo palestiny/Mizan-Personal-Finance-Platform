@@ -76,7 +76,7 @@ def main():
     if __version__ != args.expected_package_version:
         raise RuntimeError(f"Unexpected voicetut-tts version: {__version__}; expected {args.expected_package_version}")
 
-    with open(args.cases, "r", encoding="utf-8") as f:
+    with open(args.cases, "r", encoding="utf-8-sig") as f:
         cases = json.load(f)
 
     os.makedirs(args.output, exist_ok=True)
